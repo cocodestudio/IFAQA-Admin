@@ -9,16 +9,24 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        'ifaqa-plum': '#3E3239',         // Deep Charcoal Plum
-        'ifaqa-blackberry': '#6B5560',   // Muted Blackberry
-        'ifaqa-mauve': '#9E8189',        // Dusty Mauve
-        'ifaqa-sand': '#C7A9A3',         // Desert Sand / Blush
-        'ifaqa-cashmere': '#E8D2C4',     // Pale Cashmere
-        'ifaqa-linen': '#F7EFE7',        // Linen Pearl
+        'ifaqa-plum': '#0B2D22',        // Deep Imperial Forest Emerald
+        'ifaqa-blackberry': '#165A45',  // Vibrant Botanical Spruce
+        'ifaqa-mauve': '#C5A059',       // Royal Antique Burnished Gold
+        'ifaqa-sand': '#DFBA73',        // Champagne Gold Hairline
+        'ifaqa-cashmere': '#F5F0E6',    // Warm Silk Parchment
+        'ifaqa-linen': '#FAF8F5',       // Luminous Alabaster Pearl
+        ifaqa: {
+          plum: '#0B2D22',
+          blackberry: '#165A45',
+          mauve: '#C5A059',
+          sand: '#DFBA73',
+          cashmere: '#F5F0E6',
+          linen: '#FAF8F5',
+        },
       },
       backgroundImage: {
-        'gradient-mauve-reserve': 'linear-gradient(135deg, #B2949D 0%, #6B5F6F 100%)',
-        'gradient-steel-night': 'linear-gradient(145deg, #88A2BF 0%, #141318 100%)',
+        'gradient-mauve-reserve': 'linear-gradient(135deg, #165A45 0%, #0B2D22 100%)',
+        'gradient-steel-night': 'linear-gradient(145deg, #0E3B2D 0%, #061811 100%)',
       },
       fontFamily: {
         serif: ['Cinzel', 'Playfair Display', 'Georgia', 'serif'],

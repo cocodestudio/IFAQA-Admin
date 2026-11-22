@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  /* Chamfered Heritage polygon clip-path pattern (Zero-Pill Compliant) */
+  .chamfer-badge {
+    clip-path: polygon(6px 0%, calc(100% - 6px) 0%, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0% calc(100% - 6px), 0% 6px);
+  }
+  .chamfer-card {
+    clip-path: polygon(12px 0%, calc(100% - 12px) 0%, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0% calc(100% - 12px), 0% 12px);
+  }
+}
+
+/* Custom luxury scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #F7EFE7;
+}
+::-webkit-scrollbar-thumb {
+  background: #C7A9A3;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #9E8189;
+}

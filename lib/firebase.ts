@@ -20,6 +20,7 @@ let storage: FirebaseStorage | null = null;
 export const isMockFallback = false;
 
 export function getFirebaseApp(): FirebaseApp | null {
+  if (typeof window === 'undefined') return null;
   if (!getApps().length) {
     try {
       app = initializeApp(firebaseConfig);

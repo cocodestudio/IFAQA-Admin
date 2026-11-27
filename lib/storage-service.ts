@@ -4,9 +4,13 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml'];
 const MAX_FILE_SIZE = 8 * 1024 * 1024; // 8MB
 
-export function validateImageFile(file: File | { name: string; type: string; size?: number } | null | undefined): boolean {
+export function validateImageFile(
+  file: File | { name: string; type: string; size?: number } | null | undefined
+): boolean {
   if (!file || !ALLOWED_MIME_TYPES.includes(file.type)) {
-    throw new Error(`INVALID_MEDIA_TYPE: File type "${file?.type}" is not supported. Upload JPG, PNG, or WebP.`);
+    throw new Error(
+      `INVALID_MEDIA_TYPE: File type "${file?.type}" is not supported. Upload JPG, PNG, or WebP.`
+    );
   }
   if (file.size && file.size > MAX_FILE_SIZE) {
     throw new Error('FILE_TOO_LARGE: File exceeds maximum allowed size of 8MB.');
@@ -24,24 +28,21 @@ export async function uploadMedia(file: File, path: string): Promise<string> {
       const snapshot = await uploadBytes(storageRef, file);
       return await getDownloadURL(snapshot.ref);
     } catch (err) {
-      console.warn('Firebase storage upload failed; creating local preview URL:', err);
+      console.warn('Firebase storage upload failed; converting to portable data URL:', err);
     }
   }
 
-  // Fallback: create object URL or base64 data URL
-  return new Promise((resolve) => {
-    if (typeof window !== 'undefined' && window.URL && window.URL.createObjectURL) {
-      try {
-        const objectUrl = window.URL.createObjectURL(file);
-        resolve(objectUrl);
-        return;
-      } catch (_) {}
-    }
-
+  // Fallback uses a base64 DataURL so uploaded images also render cross-origin on the storefront
+  return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onloadend = () => {
-      resolve(reader.result as string);
+      if (typeof reader.result === 'string') {
+        resolve(reader.result);
+      } else {
+        reject(new Error('Unable to read image file'));
+      }
     };
+    reader.onerror = () => reject(new Error('Failed reading image file'));
     reader.readAsDataURL(file);
   });
 }

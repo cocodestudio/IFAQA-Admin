@@ -1,48 +1,56 @@
 import React from 'react';
-import { LucideIcon } from 'lucide-react';
+import Link from 'next/link';
 
 interface StatCardProps {
   title: string;
   value: string | number;
   subtitle?: string;
-  icon: LucideIcon;
-  badge?: React.ReactNode;
-  accentColor?: string;
+  href?: string;
+  linkLabel?: string;
+  accentDot?: 'plum' | 'brass' | 'amber' | 'green';
 }
 
 export function StatCard({
   title,
   value,
   subtitle,
-  icon: Icon,
-  badge,
-  accentColor = 'border-l-[#6B5560]'
+  href,
+  linkLabel,
+  accentDot,
 }: StatCardProps) {
+  const dotColors = {
+    plum: 'bg-ifaqa-plum',
+    brass: 'bg-ifaqa-mauve',
+    amber: 'bg-amber-600',
+    green: 'bg-[#165A45]',
+  };
+
   return (
-    <div className={`p-6 bg-[#F7EFE7] border border-[#C7A9A3]/50 border-l-4 ${accentColor} shadow-sm relative overflow-hidden`}>
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <span className="text-xs font-mono uppercase tracking-wider text-[#6B5560]">
-            {title}
-          </span>
-          <div className="mt-2 text-3xl font-serif font-bold text-[#3E3239]">
-            {value}
-          </div>
-          {subtitle && (
-            <p className="mt-1 text-xs text-[#9E8189]">
-              {subtitle}
-            </p>
-          )}
-        </div>
-        <div className="w-10 h-10 border border-[#C7A9A3]/60 bg-[#E8D2C4]/30 flex items-center justify-center text-[#3E3239]">
-          <Icon className="w-5 h-5" />
+    <div className="p-5 bg-white rounded-xl border border-ifaqa-plum/10 shadow-luxury-card flex flex-col justify-between min-h-[132px]">
+      <div className="flex items-center justify-between gap-2">
+        <span className="text-sm font-sans text-[#5A6962]">{title}</span>
+        {accentDot && (
+          <span className={`w-2 h-2 rounded-sm shrink-0 ${dotColors[accentDot]}`} />
+        )}
+      </div>
+
+      <div className="my-2">
+        <div className="font-serif font-normal text-3xl text-ifaqa-plum tabular-nums leading-none">
+          {value}
         </div>
       </div>
-      {badge && (
-        <div className="mt-4 pt-3 border-t border-[#C7A9A3]/30">
-          {badge}
-        </div>
-      )}
+
+      <div className="flex items-center justify-between gap-2 pt-2 border-t border-ifaqa-plum/5 text-xs">
+        <span className="text-[#5A6962] truncate">{subtitle || ''}</span>
+        {href && linkLabel && (
+          <Link
+            href={href}
+            className="text-ifaqa-plum font-medium hover:text-[#165A45] shrink-0 transition-colors"
+          >
+            {linkLabel}
+          </Link>
+        )}
+      </div>
     </div>
   );
 }

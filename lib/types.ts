@@ -1,6 +1,6 @@
 /**
  * IFAQA Herbal Remedies — Shared Domain Models & Schema Contracts
- * Location: shared/types/index.ts
+ * Location: admin/lib/types.ts
  */
 
 // --- Classical Unani Pharmaceutical Forms ---
@@ -17,80 +17,80 @@ export type RemedyForm =
 
 // --- Botanical Ingredient Interface ---
 export interface HerbalIngredient {
-  botanicalName: string;         // e.g. "Cuminum cyminum"
-  commonName: string;            // e.g. "Zira Siyah / Caraway"
-  partUsed: string;              // e.g. "Dried Seeds"
-  proportion: string;            // e.g. "25%"
+  botanicalName: string;
+  commonName: string;
+  partUsed: string;
+  proportion: string;
 }
 
 // --- Dosage Instructions Interface ---
 export interface DosageInstructions {
-  amount: string;                // e.g. "5 grams (half a teaspoon)"
-  timing: string;                // e.g. "Twice daily after meals"
-  anupana: string;               // Traditional vehicle: "With lukewarm spring water"
-  contraindications: string[];   // Specific medical contraindications
+  amount: string;
+  timing: string;
+  anupana: string;
+  contraindications: string[];
 }
 
 // --- Packaging Specifications ---
 export interface RemedyPackaging {
-  size: string;                  // e.g. "250g", "500ml", "10g"
-  containerType: string;         // e.g. "Amber Glass Jar with Gold Crest Lid"
+  size: string;
+  containerType: string;
 }
 
 // --- Master Herbal Remedy Contract ---
 export interface HerbalRemedy {
-  id: string;                    // Document ID (slug-based, e.g. "jawarish-kamuni-kabir")
-  sku: string;                   // Unique SKU: "IFA-HAZ-001"
-  name: string;                  // Primary English/Brand Name: "Jawarish Kamuni Kabir"
-  urduName: string;              // Classical Arabic/Urdu Script: "جوارش کمونی کبیر"
-  romanUrduName: string;         // Romanized Urdu: "Jawarish Kamuni Kabir"
-  slug: string;                  // URL-safe Slug: "jawarish-kamuni-kabir"
-  categoryId: AilmentCategoryId; // Foreign Key to Ailment Category
-  categoryName: string;          // Denormalized Category Name for UI performance
-  shortDescription: string;      // 1-2 sentence luxury teaser
-  longDescription: string;       // In-depth botanical & clinical traditional description
-  therapeuticIndications: string[];// Clinical indications list
+  id: string;
+  sku: string;
+  name: string;
+  urduName: string;
+  romanUrduName: string;
+  slug: string;
+  categoryId: AilmentCategoryId;
+  categoryName: string;
+  shortDescription: string;
+  longDescription: string;
+  therapeuticIndications: string[];
   herbalIngredients: HerbalIngredient[];
   dosageInstructions: DosageInstructions;
   form: RemedyForm;
   packaging: RemedyPackaging;
-  pricePKR: number;              // Base price in Pakistani Rupees (PKR)
-  comparePricePKR?: number;      // Original strikethrough price in PKR
-  priceUSD: number;              // International price in US Dollars (USD)
-  stockQuantity: number;         // Current dispensary inventory
-  isAvailable: boolean;          // General availability flag
-  isFeatured: boolean;           // Showcase on homepage feature carousel
-  isBestSeller: boolean;         // Best seller distinction
-  rating: number;                // Aggregate rating (1.0 to 5.0)
-  reviewCount: number;           // Approved review count
-  images: string[];              // Gallery image URLs
-  primaryImage: string;          // Hero display image URL
-  createdAt?: string;            // ISO Timestamp or Firestore Timestamp
-  updatedAt?: string;            // ISO Timestamp or Firestore Timestamp
+  pricePKR: number;
+  comparePricePKR?: number;
+  priceUSD: number;
+  stockQuantity: number;
+  isAvailable: boolean;
+  isFeatured: boolean;
+  isBestSeller: boolean;
+  rating: number;
+  reviewCount: number;
+  images: string[];
+  primaryImage: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-// --- Ailment Category IDs (Classical Desi Dawakhana System) ---
+// --- Ailment Category IDs ---
 export type AilmentCategoryId =
-  | 'hazim'                      // Digestive & Gastrointestinal
-  | 'muqawwi'                    // Vitality & Cognitive Energy
-  | 'sual'                       // Respiratory, Bronchial & Cough
-  | 'mafasil'                    // Joint Mobility & Musculoskeletal
-  | 'jild'                       // Dermatological Health & Blood Purification
-  | 'quwwat-e-mudafiat';         // Immunity, Longevity & Cardiac Health
+  | 'hazim'
+  | 'muqawwi'
+  | 'sual'
+  | 'mafasil'
+  | 'jild'
+  | 'quwwat-e-mudafiat';
 
 // --- Ailment Category Contract ---
 export interface AilmentCategory {
   id: AilmentCategoryId;
-  name: string;                  // e.g. "Digestive & Gastrointestinal"
-  urduName: string;              // e.g. "ہاضمہ اور معدہ"
-  romanName: string;             // e.g. "Hazim"
-  slug: string;                  // e.g. "hazim"
-  tagline: string;               // e.g. "Restoring gastrointestinal equilibrium and metabolic fire"
-  description: string;           // Medical category overview
-  iconIdentifier: string;        // 3D icon / botanical emblem identifier
-  bannerImage: string;           // Header artwork URL
-  displayOrder: number;          // Visual sorting sequence (1 to 6)
-  remedyCount: number;           // Count of active formulations
+  name: string;
+  urduName: string;
+  romanName: string;
+  slug: string;
+  tagline: string;
+  description: string;
+  iconIdentifier: string;
+  bannerImage: string;
+  displayOrder: number;
+  remedyCount: number;
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
@@ -102,13 +102,13 @@ export type BannerGradient = 'mauve-reserve' | 'steel-night' | 'none';
 export type BannerTextAlignment = 'left' | 'center' | 'right';
 
 export interface PromotionalBanner {
-  id: string;                    // e.g. "banner-winter-respiratory-2026"
-  headline: string;              // e.g. "Imperial Dawakhana Formulations"
-  subheadline: string;           // e.g. "Formulated with 24K Gold Calx & Wild Himalayan Saffron"
-  badgeText: string;             // e.g. "HERITAGE HARVEST 2026" (Rendered as Architectural Badge)
-  ctaText: string;               // e.g. "Explore Elixirs"
-  ctaLink: string;               // e.g. "/catalog/muqawwi"
-  imageUrl: string;              // Banner image asset URL
+  id: string;
+  headline: string;
+  subheadline: string;
+  badgeText: string;
+  ctaText: string;
+  ctaLink: string;
+  imageUrl: string;
   gradientOverlay: BannerGradient;
   textAlignment: BannerTextAlignment;
   placement: BannerPlacement;
@@ -147,12 +147,12 @@ export interface ShippingAddress {
 
 // --- Order Lifecycle & Payment Status ---
 export type OrderStatus =
-  | 'placed'                     // Order submitted by customer
-  | 'confirmed'                  // Approved by dispensary admin
-  | 'dispensing'                 // Formulated & compounded by Hakeem
-  | 'dispatched'                 // Handed to courier partner
-  | 'delivered'                  // Confirmed receipt by recipient
-  | 'cancelled';                 // Cancelled or refunded
+  | 'placed'
+  | 'confirmed'
+  | 'dispensing'
+  | 'dispatched'
+  | 'delivered'
+  | 'cancelled';
 
 export type PaymentMethod =
   | 'cash_on_delivery'
@@ -167,9 +167,9 @@ export type PaymentStatus =
 
 // --- Master Customer Order Contract ---
 export interface CustomerOrder {
-  id: string;                    // Firestore Document ID
-  orderNumber: string;           // Human-readable reference: "IFA-2026-1049"
-  customerId: string;            // Firebase Auth UID or "guest"
+  id: string;
+  orderNumber: string;
+  customerId: string;
   customerName: string;
   customerPhone: string;
   customerEmail?: string;
@@ -193,18 +193,20 @@ export interface CustomerOrder {
 // --- Customer Profile Contract ---
 export interface SavedAddress extends ShippingAddress {
   id: string;
-  label: string;                 // "Home", "Dawakhana / Clinic", "Office"
+  label: string;
   isDefault: boolean;
+  phone?: string;
 }
 
 export interface CustomerProfile {
-  id: string;                    // Firebase Auth UID
+  id: string;
   phoneNumber: string;
   fullName: string;
   email?: string;
   savedAddresses: SavedAddress[];
   totalOrdersCount: number;
   lifetimeSpend: number;
+  supportTicketCount?: number;
   createdAt: string;
   lastActiveAt: string;
 }
@@ -213,14 +215,34 @@ export interface CustomerProfile {
 export interface CustomerReview {
   id: string;
   remedyId: string;
+  remedySlug?: string;
+  remedyName?: string;
+  remedyImage?: string;
   customerId: string;
   customerName: string;
-  rating: number;                // 1 to 5
+  customerPhone?: string;
+  rating: number;
   title: string;
   comment: string;
   verifiedPurchase: boolean;
-  approved: boolean;             // Moderation flag (default false)
+  approved: boolean;
   createdAt: string;
+}
+
+// --- Customer Support Ticket Contract ---
+export interface SupportTicketRecord {
+  id: string;
+  customerId?: string;
+  customerName?: string;
+  customerPhone?: string;
+  category: string;
+  orderNumber?: string;
+  subject: string;
+  message: string;
+  status: 'Open' | 'In Review' | 'Resolved';
+  adminReply?: string;
+  createdAt: string;
+  updatedAt?: string;
 }
 
 // --- Admin System User Contract ---
@@ -241,6 +263,16 @@ export interface DispensaryKPIs {
   pendingOrders: number;
   totalRevenuePKR: number;
   totalRevenueUSD: number;
+  pendingReviews?: number;
+  openTickets?: number;
+  totalCustomers?: number;
+}
+
+export interface OrderTrendPoint {
+  label: string;
+  dateKey: string;
+  orders: number;
+  revenue: number;
 }
 
 export interface AdminSession {
@@ -251,4 +283,3 @@ export interface AdminSession {
   phoneNumber?: string;
   tokenExpiresAt?: number;
 }
-

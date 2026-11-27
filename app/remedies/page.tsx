@@ -1,53 +1,55 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { HerbalRemedy } from '@/lib/types';
 import {
   getRemedies,
   getAilments,
   deleteRemedy,
-  updateRemedy
+  updateRemedy,
 } from '@/lib/data-service';
+import { formatPriceINR } from '@/lib/formatters';
+import { usePagination } from '@/lib/use-pagination';
 import { DataTable } from '@/components/ui/DataTable';
+import { Pagination } from '@/components/ui/Pagination';
+import { SearchField } from '@/components/ui/SearchField';
 import { NotchedBadge, RuledBadge } from '@/components/ui/ArchitecturalBadge';
 import { Modal } from '@/components/ui/Modal';
+import { FormSelect } from '@/components/ui/FormInput';
 import {
   Plus,
-  Search,
-  Filter,
   Edit,
   Trash2,
   AlertCircle,
   Eye,
-  EyeOff
+  EyeOff,
+  ExternalLink,
+  Star,
+  RefreshCw,
 } from 'lucide-react';
 
 export default function RemediesListPage() {
-  const [remedies, setRemedies] = useState<HerbalRemedy[]>([]);
+  const [allRemedies, setAllRemedies] = useState<HerbalRemedy[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [stockFilter, setStockFilter] = useState<string>('all');
 
-  // Deletion modal state
   const [deleteCandidate, setDeleteCandidate] = useState<HerbalRemedy | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const loadData = async () => {
+  const storefrontBase =
+    process.env.NEXT_PUBLIC_STOREFRONT_URL || 'http://localhost:3000';
+
+  const loadData = async (forceRefresh = false) => {
     setLoading(true);
     try {
-      const cats = getAilments();
-      setCategories(cats);
-
-      const data = await getRemedies({
-        categoryId: selectedCategory !== 'all' ? selectedCategory : undefined,
-        search: search || undefined,
-        stockFilter: stockFilter !== 'all' ? stockFilter : undefined
-      });
-      setRemedies(data);
+      setCategories(getAilments());
+      const data = await getRemedies({ forceRefresh });
+      setAllRemedies(data);
     } catch (err) {
       console.error('Failed to load remedies:', err);
     } finally {
@@ -57,19 +59,59 @@ export default function RemediesListPage() {
 
   useEffect(() => {
     loadData();
-  }, [selectedCategory, stockFilter]);
+  }, []);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    loadData();
-  };
+  const filteredRemedies = useMemo(() => {
+    const term = search.toLowerCase().trim();
+    return allRemedies.filter((r) => {
+      if (selectedCategory !== 'all' && r.categoryId !== selectedCategory) return false;
+      if (stockFilter === 'low' && !(r.stockQuantity > 0 && r.stockQuantity <= 10)) return false;
+      if (stockFilter === 'out' && r.stockQuantity !== 0) return false;
+      if (stockFilter === 'inactive' && r.isAvailable) return false;
+      if (term) {
+        const hit =
+          r.name.toLowerCase().includes(term) ||
+          (r.urduName || '').includes(term) ||
+          (r.romanUrduName || '').toLowerCase().includes(term) ||
+          (r.sku || '').toLowerCase().includes(term) ||
+          (r.form || '').toLowerCase().includes(term) ||
+          (r.categoryName || '').toLowerCase().includes(term);
+        if (!hit) return false;
+      }
+      return true;
+    });
+  }, [allRemedies, search, selectedCategory, stockFilter]);
+
+  const {
+    page,
+    setPage,
+    pageSize,
+    setPageSize,
+    totalPages,
+    totalItems,
+    paginatedItems,
+    resetPage,
+  } = usePagination(filteredRemedies, 10);
+
+  useEffect(() => {
+    resetPage();
+  }, [search, selectedCategory, stockFilter, resetPage]);
 
   const handleToggleAvailability = async (remedy: HerbalRemedy) => {
     try {
       const updated = await updateRemedy(remedy.id, { isAvailable: !remedy.isAvailable });
-      setRemedies(prev => prev.map(r => r.id === remedy.id ? updated : r));
+      setAllRemedies((prev) => prev.map((r) => (r.id === remedy.id ? updated : r)));
     } catch (err) {
       console.error('Failed to toggle availability:', err);
+    }
+  };
+
+  const handleToggleFeatured = async (remedy: HerbalRemedy) => {
+    try {
+      const updated = await updateRemedy(remedy.id, { isFeatured: !remedy.isFeatured });
+      setAllRemedies((prev) => prev.map((r) => (r.id === remedy.id ? updated : r)));
+    } catch (err) {
+      console.error('Failed to toggle featured:', err);
     }
   };
 
@@ -77,220 +119,349 @@ export default function RemediesListPage() {
     if (!deleteCandidate) return;
     setDeleting(true);
     setDeleteError(null);
-
     try {
       await deleteRemedy(deleteCandidate.id);
       setDeleteCandidate(null);
-      await loadData();
+      await loadData(true);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Deletion failed';
-      setDeleteError(msg);
+      setDeleteError(err instanceof Error ? err.message : 'Deletion failed');
     } finally {
       setDeleting(false);
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Top Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="font-serif text-lg font-bold text-[#3E3239] uppercase tracking-wider">
-            Dispensary Formulations & Catalog
-          </h2>
-          <p className="text-xs text-[#6B5560]">
-            Manage classical Unani medicines, posology, inventory, and pricing.
-          </p>
+    <div className="space-y-6 w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <p className="text-sm text-[#5A6962]">
+          {filteredRemedies.length} of {allRemedies.length} botanical formulations shown
+        </p>
+        <div className="flex items-center gap-2 self-start sm:self-auto">
+          <button
+            type="button"
+            onClick={() => loadData(true)}
+            disabled={loading}
+            className="h-9 px-3 rounded-lg border border-ifaqa-plum/15 bg-white text-xs font-medium text-ifaqa-plum hover:bg-ifaqa-cashmere transition-colors inline-flex items-center gap-1.5 disabled:opacity-50"
+            title="Sync latest remedies"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} strokeWidth={1.6} />
+            <span>Refresh</span>
+          </button>
+          <Link
+            href="/remedies/new"
+            className="h-9 px-4 rounded-lg bg-ifaqa-plum text-ifaqa-linen text-xs font-medium hover:bg-[#165A45] transition-colors inline-flex items-center gap-1.5"
+          >
+            <Plus className="w-4 h-4" strokeWidth={1.6} />
+            <span>Add remedy</span>
+          </Link>
         </div>
-        <Link
-          href="/remedies/new"
-          className="inline-flex items-center gap-2 px-5 py-2.5 border border-[#3E3239] bg-[#3E3239] text-[#F7EFE7] text-xs font-serif uppercase tracking-wider font-semibold hover:bg-[#6B5560] transition-colors shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Compound New Remedy</span>
-        </Link>
       </div>
 
-      {/* Filter and Search Bar */}
-      <div className="p-4 bg-[#F7EFE7] border border-[#C7A9A3]/50 shadow-sm space-y-4">
-        <form onSubmit={handleSearchSubmit} className="grid grid-cols-1 md:grid-cols-12 gap-3">
-          <div className="md:col-span-6 relative">
-            <input
-              type="text"
-              placeholder="Search by formulation name, Urdu script, or SKU..."
+      {/* Filters with Custom Luxury Dropdowns */}
+      <div className="p-4 rounded-xl bg-white border border-ifaqa-plum/10 shadow-luxury-card">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-3">
+          <div className="md:col-span-6">
+            <SearchField
               value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs bg-[#F7EFE7] border border-[#C7A9A3] text-[#3E3239] focus:outline-none focus:border-[#3E3239]"
+              onChange={setSearch}
+              placeholder="Search remedy name, Urdu, Roman Urdu, SKU, or form"
             />
-            <Search className="w-4 h-4 text-[#9E8189] absolute left-3 top-2.5" />
           </div>
 
           <div className="md:col-span-3">
-            <select
+            <FormSelect
+              compact
+              surface="linen"
               value={selectedCategory}
-              onChange={e => setSelectedCategory(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-[#F7EFE7] border border-[#C7A9A3] text-[#3E3239] focus:outline-none focus:border-[#3E3239]"
+              onChange={(e) => setSelectedCategory(e.target.value)}
             >
-              <option value="all">All Classical Ailments</option>
-              {categories.map(cat => (
+              <option value="all">All categories</option>
+              {categories.map((cat) => (
                 <option key={cat.id} value={cat.id}>
                   {cat.name}
                 </option>
               ))}
-            </select>
+            </FormSelect>
           </div>
 
           <div className="md:col-span-3">
-            <select
+            <FormSelect
+              compact
+              surface="linen"
               value={stockFilter}
-              onChange={e => setStockFilter(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-[#F7EFE7] border border-[#C7A9A3] text-[#3E3239] focus:outline-none focus:border-[#3E3239]"
+              onChange={(e) => setStockFilter(e.target.value)}
             >
-              <option value="all">All Stock Statuses</option>
-              <option value="low">Low Inventory (1-10 units)</option>
-              <option value="out">Depleted / Out of Stock</option>
-              <option value="inactive">Archived / Inactive</option>
-            </select>
+              <option value="all">All stock levels</option>
+              <option value="low">Low stock (1–10)</option>
+              <option value="out">Out of stock</option>
+              <option value="inactive">Hidden / Inactive</option>
+            </FormSelect>
           </div>
-        </form>
+        </div>
       </div>
 
-      {/* Data Table */}
       <DataTable
-        data={remedies}
-        keyExtractor={r => r.id}
-        emptyMessage={loading ? 'Loading dispensary formulations...' : 'No matching remedies found.'}
+        data={paginatedItems}
+        keyExtractor={(r) => r.id}
+        emptyMessage={loading ? 'Loading remedies...' : 'No remedies match your filter'}
+        renderMobileCard={(r) => (
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <div className="w-14 h-14 rounded-lg border border-ifaqa-plum/10 bg-ifaqa-cashmere overflow-hidden shrink-0">
+                <img
+                  src={r.primaryImage || '/images/remedies/placeholder.jpg'}
+                  alt={r.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-medium text-ifaqa-plum">{r.name}</div>
+                <div className="text-xs font-mono text-[#5A6962] mt-0.5">
+                  {r.sku} • {r.form} ({r.packaging?.size})
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="font-mono text-sm font-medium tabular-nums text-ifaqa-plum">
+                    {formatPriceINR(r.pricePKR)}
+                  </span>
+                  <RuledBadge
+                    accentColor={
+                      r.stockQuantity === 0 ? 'rose' : r.stockQuantity <= 10 ? 'amber' : 'emerald'
+                    }
+                  >
+                    {r.stockQuantity} in stock
+                  </RuledBadge>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between gap-2 pt-2 border-t border-ifaqa-plum/10">
+              <button
+                type="button"
+                onClick={() => handleToggleAvailability(r)}
+                className={`h-8 px-2.5 rounded-md text-xs font-medium border inline-flex items-center gap-1.5 ${
+                  r.isAvailable
+                    ? 'border-[#165A45]/25 bg-[#EEF4F1] text-ifaqa-plum'
+                    : 'border-ifaqa-plum/15 bg-ifaqa-linen text-[#5A6962]'
+                }`}
+              >
+                {r.isAvailable ? (
+                  <Eye className="w-3.5 h-3.5 text-[#165A45]" strokeWidth={1.6} />
+                ) : (
+                  <EyeOff className="w-3.5 h-3.5 text-[#5A6962]" strokeWidth={1.6} />
+                )}
+                <span>{r.isAvailable ? 'Active' : 'Hidden'}</span>
+              </button>
+
+              <div className="flex items-center gap-2">
+                <Link
+                  href={`/remedies/${r.id}/edit`}
+                  className="h-8 px-3 rounded-lg border border-ifaqa-plum/15 bg-white text-xs font-medium text-ifaqa-plum inline-flex items-center gap-1.5"
+                >
+                  <Edit className="w-3.5 h-3.5" strokeWidth={1.6} />
+                  <span>Edit</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDeleteCandidate(r);
+                    setDeleteError(null);
+                  }}
+                  className="w-8 h-8 rounded-lg border border-red-200 text-red-700 flex items-center justify-center hover:bg-red-50"
+                  aria-label={`Delete ${r.name}`}
+                >
+                  <Trash2 className="w-3.5 h-3.5" strokeWidth={1.6} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         columns={[
           {
-            header: 'Formulation Details',
-            accessor: r => (
+            header: 'Formulation',
+            accessor: (r) => (
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 border border-[#C7A9A3]/60 bg-[#E8D2C4]/20 flex-shrink-0 overflow-hidden">
+                <div className="w-11 h-11 rounded-lg border border-ifaqa-plum/10 bg-ifaqa-cashmere shrink-0 overflow-hidden">
                   <img
                     src={r.primaryImage || '/images/remedies/placeholder.jpg'}
                     alt={r.name}
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div>
-                  <div className="font-serif font-bold text-sm text-[#3E3239]">
+                <div className="min-w-0">
+                  <div className="text-sm font-medium text-ifaqa-plum truncate max-w-[230px]">
                     {r.name}
                   </div>
-                  <div className="text-xs font-mono text-[#6B5560] flex items-center gap-2">
-                    <span>SKU: {r.sku}</span>
-                    <span>&bull;</span>
-                    <span dir="rtl" className="font-sans text-xs">{r.urduName}</span>
+                  <div className="text-xs text-[#5A6962] flex items-center gap-2 mt-0.5">
+                    <span className="font-mono">{r.sku}</span>
+                    <span>•</span>
+                    <span dir="rtl" className="font-urdu">
+                      {r.urduName}
+                    </span>
                   </div>
                 </div>
               </div>
-            )
+            ),
           },
           {
-            header: 'Ailment Category',
-            accessor: r => (
+            header: 'Category',
+            accessor: (r) => (
               <NotchedBadge variant="default">
                 {r.categoryName || r.categoryId}
               </NotchedBadge>
-            )
+            ),
           },
           {
-            header: 'Form & Packaging',
-            accessor: r => (
+            header: 'Form',
+            accessor: (r) => (
               <div className="text-xs">
-                <span className="font-serif font-medium text-[#3E3239]">{r.form}</span>
-                <div className="text-[#6B5560] font-mono text-[11px]">{r.packaging?.size}</div>
+                <div className="text-ifaqa-plum font-medium">{r.form}</div>
+                <div className="text-[#5A6962]">{r.packaging?.size}</div>
               </div>
-            )
+            ),
           },
           {
             header: 'Price',
-            accessor: r => (
-              <div className="text-xs font-mono">
-                <div className="font-bold text-[#3E3239]">PKR {r.pricePKR.toLocaleString()}</div>
-                <div className="text-[#9E8189] text-[11px]">USD ${r.priceUSD.toFixed(2)}</div>
+            className: 'text-right',
+            accessor: (r) => (
+              <div className="font-mono tabular-nums text-xs">
+                <div className="text-sm font-medium text-ifaqa-plum">
+                  {formatPriceINR(r.pricePKR)}
+                </div>
+                <div className="text-[#5A6962]">${r.priceUSD.toFixed(2)}</div>
               </div>
-            )
+            ),
           },
           {
-            header: 'Inventory',
-            accessor: r => (
-              <RuledBadge accentColor={r.stockQuantity === 0 ? 'rose' : r.stockQuantity <= 10 ? 'amber' : 'emerald'}>
+            header: 'Stock',
+            accessor: (r) => (
+              <RuledBadge
+                accentColor={
+                  r.stockQuantity === 0 ? 'rose' : r.stockQuantity <= 10 ? 'amber' : 'emerald'
+                }
+              >
                 {r.stockQuantity} units
               </RuledBadge>
-            )
+            ),
           },
           {
-            header: 'Availability',
-            accessor: r => (
+            header: 'Featured',
+            accessor: (r) => (
+              <button
+                type="button"
+                onClick={() => handleToggleFeatured(r)}
+                className={`w-8 h-8 rounded-lg border flex items-center justify-center transition-colors ${
+                  r.isFeatured
+                    ? 'border-ifaqa-sand bg-[#FAF5EC] text-[#99752D]'
+                    : 'border-ifaqa-plum/10 bg-white text-[#5A6962] hover:bg-ifaqa-cashmere'
+                }`}
+                title={r.isFeatured ? 'Featured on homepage' : 'Mark as featured'}
+              >
+                <Star
+                  className="w-4 h-4"
+                  strokeWidth={1.6}
+                  fill={r.isFeatured ? 'currentColor' : 'none'}
+                />
+              </button>
+            ),
+          },
+          {
+            header: 'Visibility',
+            accessor: (r) => (
               <button
                 type="button"
                 onClick={() => handleToggleAvailability(r)}
-                className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-serif uppercase tracking-wider border transition-colors ${
+                className={`h-8 px-2.5 rounded-md text-xs font-medium border transition-colors inline-flex items-center gap-1.5 ${
                   r.isAvailable
-                    ? 'border-emerald-700 bg-emerald-50 text-emerald-900 hover:bg-emerald-100'
-                    : 'border-stone-400 bg-stone-100 text-stone-600 hover:bg-stone-200'
+                    ? 'border-[#165A45]/25 bg-[#EEF4F1] text-ifaqa-plum hover:bg-[#dfe9e4]'
+                    : 'border-ifaqa-plum/15 bg-ifaqa-linen text-[#5A6962] hover:bg-ifaqa-cashmere'
                 }`}
-                title="Toggle Active Availability"
               >
-                {r.isAvailable ? <Eye className="w-3 h-3 text-emerald-700" /> : <EyeOff className="w-3 h-3 text-stone-500" />}
-                <span>{r.isAvailable ? 'Active' : 'Disabled'}</span>
+                {r.isAvailable ? (
+                  <Eye className="w-3.5 h-3.5 text-[#165A45]" strokeWidth={1.6} />
+                ) : (
+                  <EyeOff className="w-3.5 h-3.5 text-[#5A6962]" strokeWidth={1.6} />
+                )}
+                <span>{r.isAvailable ? 'Active' : 'Hidden'}</span>
               </button>
-            )
+            ),
           },
           {
             header: 'Actions',
             className: 'text-right',
-            accessor: r => (
-              <div className="flex items-center justify-end gap-2">
+            accessor: (r) => (
+              <div className="flex items-center justify-end gap-1.5">
+                <a
+                  href={`${storefrontBase}/remedy/${r.slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-8 h-8 rounded-lg border border-ifaqa-plum/15 bg-white text-[#5A6962] hover:text-ifaqa-plum hover:bg-ifaqa-cashmere transition-colors inline-flex items-center justify-center"
+                  title="View on storefront"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" strokeWidth={1.6} />
+                </a>
                 <Link
                   href={`/remedies/${r.id}/edit`}
-                  className="p-1.5 border border-[#C7A9A3] text-[#3E3239] hover:bg-[#E8D2C4]/40 transition-colors"
-                  title="Edit Formulation"
+                  className="w-8 h-8 rounded-lg border border-ifaqa-plum/15 bg-white text-ifaqa-plum hover:bg-ifaqa-cashmere transition-colors inline-flex items-center justify-center"
+                  title="Edit remedy"
                 >
-                  <Edit className="w-3.5 h-3.5" />
+                  <Edit className="w-3.5 h-3.5" strokeWidth={1.6} />
                 </Link>
                 <button
                   type="button"
-                  onClick={() => { setDeleteCandidate(r); setDeleteError(null); }}
-                  className="p-1.5 border border-red-300 text-red-700 hover:bg-red-50 transition-colors"
-                  title="Delete Formulation"
+                  onClick={() => {
+                    setDeleteCandidate(r);
+                    setDeleteError(null);
+                  }}
+                  className="w-8 h-8 rounded-lg border border-red-200 bg-white text-red-700 hover:bg-red-50 transition-colors inline-flex items-center justify-center"
+                  title="Delete remedy"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-3.5 h-3.5" strokeWidth={1.6} />
                 </button>
               </div>
-            )
-          }
+            ),
+          },
         ]}
       />
 
-      {/* Delete Confirmation Modal with Safety Lock Display */}
+      <Pagination
+        currentPage={page}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+        itemLabel="remedies"
+      />
+
       <Modal
         isOpen={!!deleteCandidate}
         onClose={() => setDeleteCandidate(null)}
-        title="Confirm Formulation Deletion"
+        title="Delete formulation"
         maxWidth="max-w-md"
       >
         <div className="space-y-4">
-          <p className="text-sm text-[#3E3239]">
-            Are you sure you wish to delete <strong className="font-serif">{deleteCandidate?.name}</strong> (SKU: {deleteCandidate?.sku})?
+          <p className="text-sm text-[#3E524A]">
+            Are you sure you want to delete{' '}
+            <strong className="font-medium text-ifaqa-plum">{deleteCandidate?.name}</strong> (
+            <span className="font-mono text-xs">{deleteCandidate?.sku}</span>)?
           </p>
 
           {deleteError && (
-            <div className="p-3 border-l-4 border-red-700 bg-red-50 text-red-900 text-xs flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-red-700 flex-shrink-0 mt-0.5" />
+            <div className="p-3 rounded-lg border border-red-200 bg-red-50 text-red-900 text-xs flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-red-700 shrink-0 mt-0.5" strokeWidth={1.6} />
               <span>{deleteError}</span>
             </div>
           )}
 
-          <div className="p-3 border border-[#C7A9A3]/40 bg-[#E8D2C4]/20 text-xs text-[#6B5560]">
-            <span className="font-bold text-[#3E3239]">Safety Lock:</span> Deletion is strictly blocked if any pending customer orders reference this remedy. Consider toggling availability to &quot;Disabled&quot; instead.
+          <div className="p-3 rounded-lg border border-ifaqa-plum/10 bg-ifaqa-linen text-xs text-[#5A6962]">
+            Remedies attached to active customer orders cannot be deleted. Hide availability instead to keep order history intact.
           </div>
 
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#C7A9A3]/30">
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-ifaqa-plum/10">
             <button
               type="button"
               onClick={() => setDeleteCandidate(null)}
-              className="px-4 py-2 border border-[#C7A9A3] text-xs font-serif uppercase tracking-wider text-[#3E3239] hover:bg-[#E8D2C4]/30"
+              className="h-9 px-4 rounded-lg border border-ifaqa-plum/15 bg-white text-xs font-medium text-ifaqa-plum hover:bg-ifaqa-cashmere"
             >
               Cancel
             </button>
@@ -298,9 +469,9 @@ export default function RemediesListPage() {
               type="button"
               onClick={handleDeleteConfirm}
               disabled={deleting}
-              className="px-4 py-2 border border-red-800 bg-red-800 text-white text-xs font-serif uppercase tracking-wider hover:bg-red-900 disabled:opacity-50"
+              className="h-9 px-4 rounded-lg bg-red-800 text-white text-xs font-medium hover:bg-red-900 disabled:opacity-50"
             >
-              {deleting ? 'Verifying Lock...' : 'Confirm Deletion'}
+              {deleting ? 'Checking orders...' : 'Delete remedy'}
             </button>
           </div>
         </div>

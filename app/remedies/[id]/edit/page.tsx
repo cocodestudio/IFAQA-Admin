@@ -20,13 +20,13 @@ export default function EditRemedyPage() {
     if (!id) return;
     setLoading(true);
     getRemedyById(id)
-      .then(data => {
+      .then((data) => {
         setRemedy(data);
         setError(null);
       })
-      .catch(err => {
-        console.error('Failed to load remedy for edit:', err);
-        setError(`NOT_FOUND: Remedy "${id}" does not exist in dispensary records.`);
+      .catch((err) => {
+        console.error('Failed to load remedy:', err);
+        setError(`Remedy "${id}" could not be found.`);
       })
       .finally(() => {
         setLoading(false);
@@ -35,27 +35,27 @@ export default function EditRemedyPage() {
 
   if (loading) {
     return (
-      <div className="p-12 text-center text-[#3E3239] space-y-3">
-        <div className="w-8 h-8 border-2 border-[#C7A9A3] border-t-[#3E3239] animate-spin mx-auto" />
-        <p className="font-serif text-sm tracking-wider uppercase">Loading formulation spec...</p>
+      <div className="p-12 text-center space-y-3">
+        <div className="w-8 h-8 rounded-full border-2 border-ifaqa-plum/15 border-t-ifaqa-plum animate-spin mx-auto" />
+        <p className="text-sm text-[#5A6962]">Loading formulation record</p>
       </div>
     );
   }
 
   if (error || !remedy) {
     return (
-      <div className="p-8 border border-red-300 bg-red-50 text-red-950 space-y-4 max-w-xl mx-auto my-12">
+      <div className="p-6 rounded-xl border border-red-200 bg-red-50 text-red-900 space-y-4 max-w-xl mx-auto my-8">
         <div className="flex items-center gap-3">
-          <AlertCircle className="w-6 h-6 text-red-700" />
-          <h2 className="font-serif text-lg font-bold">Formulation Not Found</h2>
+          <AlertCircle className="w-5 h-5 text-red-700" strokeWidth={1.5} />
+          <h2 className="font-serif text-lg">Remedy not found</h2>
         </div>
-        <p className="text-sm font-mono">{error || 'Remedy could not be located.'}</p>
+        <p className="text-sm">{error || 'This remedy does not exist.'}</p>
         <Link
           href="/remedies"
-          className="inline-flex items-center gap-2 px-4 py-2 border border-red-900 bg-red-900 text-red-50 text-xs font-serif uppercase tracking-wider hover:bg-red-800 transition-colors"
+          className="h-9 px-4 rounded-lg bg-ifaqa-plum text-ifaqa-linen text-xs font-medium inline-flex items-center gap-2"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Return to Remedies Catalog</span>
+          <ArrowLeft className="w-3.5 h-3.5" strokeWidth={1.5} />
+          <span>Back to remedies</span>
         </Link>
       </div>
     );
@@ -63,21 +63,19 @@ export default function EditRemedyPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <Link
           href="/remedies"
-          className="p-2 border border-[#C7A9A3] text-[#3E3239] hover:bg-[#E8D2C4]/30 transition-colors"
-          title="Return to Catalog"
+          className="w-9 h-9 rounded-lg border border-ifaqa-plum/15 bg-white flex items-center justify-center text-ifaqa-plum hover:bg-ifaqa-cashmere transition-colors"
+          title="Back to remedies"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-4 h-4" strokeWidth={1.5} />
         </Link>
         <div>
-          <h2 className="font-serif text-lg font-bold text-[#3E3239] uppercase tracking-wider">
-            Edit Formulation: {remedy.name}
+          <h2 className="font-serif font-normal text-2xl text-ifaqa-plum">
+            {remedy.name}
           </h2>
-          <p className="text-xs text-[#6B5560]">
-            Update posology, inventory stock levels, prices, and therapeutic indications.
-          </p>
+          <p className="text-xs font-mono text-[#5A6962]">{remedy.sku}</p>
         </div>
       </div>
 

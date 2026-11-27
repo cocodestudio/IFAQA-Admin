@@ -9,12 +9,12 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        'ifaqa-plum': '#0B2D22',        // Deep Imperial Forest Emerald
-        'ifaqa-blackberry': '#165A45',  // Vibrant Botanical Spruce
-        'ifaqa-mauve': '#C5A059',       // Royal Antique Burnished Gold
-        'ifaqa-sand': '#DFBA73',        // Champagne Gold Hairline
-        'ifaqa-cashmere': '#F5F0E6',    // Warm Silk Parchment
-        'ifaqa-linen': '#FAF8F5',       // Luminous Alabaster Pearl
+        'ifaqa-plum': '#0B2D22',        // Deep Forest Ink (Primary Brand Accent & Ink)
+        'ifaqa-blackberry': '#165A45',  // Botanical Spruce (Secondary Ink)
+        'ifaqa-mauve': '#C5A059',       // Burnished Brass Accent (Signature detail)
+        'ifaqa-sand': '#DFBA73',        // Light Brass Border Accent
+        'ifaqa-cashmere': '#F5F0E6',    // Warm Botanical Stone (Raised Surface)
+        'ifaqa-linen': '#FAF8F5',       // Warm Paper Canvas (Page Ground)
         ifaqa: {
           plum: '#0B2D22',
           blackberry: '#165A45',
@@ -22,6 +22,18 @@ const config: Config = {
           sand: '#DFBA73',
           cashmere: '#F5F0E6',
           linen: '#FAF8F5',
+          emerald: '#0B2D22',
+          spruce: '#165A45',
+          muted: '#5A6962',
+          gold: '#C5A059',
+          goldLight: '#FAF5EC',
+          goldDark: '#99752D',
+          onyx: '#0F1714',
+          ruby: '#B91C1C',
+          mauveStart: '#165A45',
+          mauveEnd: '#0B2D22',
+          steelStart: '#0E3B2D',
+          steelEnd: '#061811',
         },
       },
       backgroundImage: {
@@ -29,9 +41,17 @@ const config: Config = {
         'gradient-steel-night': 'linear-gradient(145deg, #0E3B2D 0%, #061811 100%)',
       },
       fontFamily: {
-        serif: ['Cinzel', 'Playfair Display', 'Georgia', 'serif'],
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        serif: ['var(--font-display)', 'Newsreader', 'Georgia', 'serif'],
+        sans: ['var(--font-sans)', 'Plus Jakarta Sans', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['var(--font-mono)', 'IBM Plex Mono', 'ui-monospace', 'monospace'],
+        urdu: ['var(--font-urdu)', 'Noto Nastaliq Urdu', 'serif'],
+      },
+      boxShadow: {
+        'luxury-card': '0 1px 2px rgba(11, 45, 34, 0.05)',
+        'luxury-lifted': '0 8px 24px rgba(11, 45, 34, 0.07)',
+      },
+      transitionTimingFunction: {
+        'emil-out': 'cubic-bezier(0.22, 1, 0.36, 1)',
       },
     },
   },

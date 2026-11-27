@@ -10,21 +10,23 @@ interface BotanicalIngredientsEditorProps {
   error?: string;
 }
 
+const cellInput =
+  'w-full px-3 py-2 rounded-lg text-xs bg-white border border-ifaqa-plum/15 text-ifaqa-plum placeholder:text-[#5A6962]/60 focus:outline-none focus:border-ifaqa-plum';
+
 export function BotanicalIngredientsEditor({
   ingredients,
   onChange,
-  error
+  error,
 }: BotanicalIngredientsEditorProps) {
   const handleAdd = () => {
     onChange([
       ...ingredients,
-      { botanicalName: '', commonName: '', partUsed: '', proportion: '' }
+      { botanicalName: '', commonName: '', partUsed: '', proportion: '' },
     ]);
   };
 
   const handleRemove = (index: number) => {
-    const updated = ingredients.filter((_, i) => i !== index);
-    onChange(updated);
+    onChange(ingredients.filter((_, i) => i !== index));
   };
 
   const handleChange = (index: number, field: keyof HerbalIngredient, value: string) => {
@@ -35,74 +37,74 @@ export function BotanicalIngredientsEditor({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <label className="block text-xs font-mono uppercase tracking-wider text-[#3E3239]">
-          Botanical Compounding Ingredients ({ingredients.length})
-        </label>
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-xs font-medium text-[#5A6962] tabular-nums">
+          {ingredients.length} botanical ingredient{ingredients.length === 1 ? '' : 's'}
+        </span>
         <button
           type="button"
           onClick={handleAdd}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#3E3239] bg-[#3E3239] text-[#F7EFE7] text-xs font-serif uppercase tracking-wider hover:bg-[#6B5560] transition-colors"
+          className="h-8 px-3 rounded-lg bg-ifaqa-plum text-ifaqa-linen text-xs font-medium hover:bg-[#165A45] transition-colors inline-flex items-center gap-1.5"
         >
-          <Plus className="w-3.5 h-3.5" />
-          <span>Add Botanical</span>
+          <Plus className="w-3.5 h-3.5" strokeWidth={1.5} />
+          <span>Add ingredient</span>
         </button>
       </div>
 
-      {error && <p className="text-xs text-red-600 font-medium">{error}</p>}
+      {error && <p className="text-xs text-red-700 font-medium">{error}</p>}
 
-      <div className="border border-[#C7A9A3]/50 bg-[#F7EFE7] divide-y divide-[#C7A9A3]/30">
+      <div className="rounded-xl border border-ifaqa-plum/10 bg-ifaqa-linen divide-y divide-ifaqa-plum/10 overflow-hidden">
         {ingredients.length === 0 ? (
-          <div className="p-4 text-center text-xs font-mono text-[#9E8189]">
-            No ingredients added yet. At least one botanical ingredient is required for compounding.
+          <div className="p-6 text-center text-xs text-[#5A6962]">
+            Add at least one herbal ingredient for this formulation
           </div>
         ) : (
           ingredients.map((item, idx) => (
-            <div key={idx} className="p-3 grid grid-cols-12 gap-3 items-center">
-              <div className="col-span-4">
+            <div key={idx} className="p-3 grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center">
+              <div className="sm:col-span-4">
                 <input
                   type="text"
-                  placeholder="Botanical Name (e.g. Cuminum cyminum)"
+                  placeholder="Botanical name (e.g. Cuminum cyminum)"
                   value={item.botanicalName}
-                  onChange={e => handleChange(idx, 'botanicalName', e.target.value)}
-                  className="w-full px-2.5 py-1.5 text-xs bg-[#F7EFE7] border border-[#C7A9A3] text-[#3E3239] focus:outline-none focus:border-[#3E3239]"
+                  onChange={(e) => handleChange(idx, 'botanicalName', e.target.value)}
+                  className={cellInput}
                 />
               </div>
-              <div className="col-span-3">
+              <div className="sm:col-span-3">
                 <input
                   type="text"
-                  placeholder="Common / Unani Name"
+                  placeholder="Common / Unani name"
                   value={item.commonName}
-                  onChange={e => handleChange(idx, 'commonName', e.target.value)}
-                  className="w-full px-2.5 py-1.5 text-xs bg-[#F7EFE7] border border-[#C7A9A3] text-[#3E3239] focus:outline-none focus:border-[#3E3239]"
+                  onChange={(e) => handleChange(idx, 'commonName', e.target.value)}
+                  className={cellInput}
                 />
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <input
                   type="text"
-                  placeholder="Part Used (e.g. Seeds)"
+                  placeholder="Part used"
                   value={item.partUsed}
-                  onChange={e => handleChange(idx, 'partUsed', e.target.value)}
-                  className="w-full px-2.5 py-1.5 text-xs bg-[#F7EFE7] border border-[#C7A9A3] text-[#3E3239] focus:outline-none focus:border-[#3E3239]"
+                  onChange={(e) => handleChange(idx, 'partUsed', e.target.value)}
+                  className={cellInput}
                 />
               </div>
-              <div className="col-span-2">
+              <div className="sm:col-span-2">
                 <input
                   type="text"
-                  placeholder="Proportion (e.g. 25%)"
+                  placeholder="Share (e.g. 25%)"
                   value={item.proportion}
-                  onChange={e => handleChange(idx, 'proportion', e.target.value)}
-                  className="w-full px-2.5 py-1.5 text-xs bg-[#F7EFE7] border border-[#C7A9A3] text-[#3E3239] focus:outline-none focus:border-[#3E3239]"
+                  onChange={(e) => handleChange(idx, 'proportion', e.target.value)}
+                  className={`${cellInput} font-mono tabular-nums`}
                 />
               </div>
-              <div className="col-span-1 text-right">
+              <div className="sm:col-span-1 flex justify-end">
                 <button
                   type="button"
                   onClick={() => handleRemove(idx)}
-                  className="p-1.5 text-red-700 hover:text-red-900 hover:bg-red-50 transition-colors"
-                  title="Remove Botanical"
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-[#5A6962] hover:text-red-700 hover:bg-red-50 transition-colors"
+                  title="Remove ingredient"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-4 h-4" strokeWidth={1.5} />
                 </button>
               </div>
             </div>

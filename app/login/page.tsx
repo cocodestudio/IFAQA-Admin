@@ -3,7 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useAdminAuth } from '@/lib/admin-auth';
-import { AlertCircle, Shield, KeyRound, Phone, Lock } from 'lucide-react';
+import { AlertCircle, KeyRound, Phone, Lock, Eye, EyeOff, ArrowRight } from 'lucide-react';
 
 function LoginForm() {
   const searchParams = useSearchParams();
@@ -14,14 +14,15 @@ function LoginForm() {
   const [activeTab, setActiveTab] = useState<'credentials' | 'otp'>('credentials');
   const [email, setEmail] = useState('admin@ifaqaremedies.com');
   const [password, setPassword] = useState('ImperialDawakhana2026!');
-  const [phone, setPhone] = useState('+923001234567');
+  const [showPassword, setShowPassword] = useState(false);
+  const [phone, setPhone] = useState('+919729840336');
   const [otp, setOtp] = useState('123456');
   const [loading, setLoading] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
 
   useEffect(() => {
     if (isExpired) {
-      setLocalError('Your administrative session has expired. Please re-authenticate.');
+      setLocalError('Your session expired. Sign in again to continue.');
     }
   }, [isExpired]);
 
@@ -32,8 +33,7 @@ function LoginForm() {
     try {
       await loginWithCredentials(email, password);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Login failed';
-      setLocalError(msg);
+      setLocalError(err instanceof Error ? err.message : 'Sign in failed');
     } finally {
       setLoading(false);
     }
@@ -46,8 +46,7 @@ function LoginForm() {
     try {
       await loginWithPhoneOtp(phone, otp);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'OTP Verification failed';
-      setLocalError(msg);
+      setLocalError(err instanceof Error ? err.message : 'Verification failed');
     } finally {
       setLoading(false);
     }
@@ -57,162 +56,231 @@ function LoginForm() {
     setActiveTab('credentials');
     setEmail('admin@ifaqaremedies.com');
     setPassword('ImperialDawakhana2026!');
+    setLocalError(null);
   };
 
   return (
-    <div className="w-full max-w-md bg-[#F7EFE7] border border-[#C7A9A3] shadow-2xl relative z-10 overflow-hidden">
-      {/* Brand Card Header */}
-      <div className="p-8 text-center bg-[#3E3239] text-[#F7EFE7] border-b border-[#6B5560]/40">
-        <div className="mx-auto w-36 h-16 flex items-center justify-center mb-3">
+    <div className="min-h-screen bg-ifaqa-linen flex items-center justify-center p-4 sm:p-6 lg:p-10">
+      <div className="w-full max-w-[1120px] bg-white rounded-2xl border border-ifaqa-plum/10 shadow-luxury-lifted overflow-hidden grid grid-cols-1 lg:grid-cols-12">
+        {/* Left Botanical World Panel */}
+        <div className="lg:col-span-6 relative bg-ifaqa-cashmere p-7 sm:p-10 flex flex-col justify-between min-h-[260px] lg:min-h-[600px] border-b lg:border-b-0 lg:border-e border-ifaqa-plum/10 overflow-hidden">
+          {/* Calm blended background photograph */}
           <img
-            src="/images/logo.png"
-            alt="IFAQA Herbal Remedies"
-            className="max-h-full max-w-full object-contain filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]"
+            src="/images/hero-botanical.jpg"
+            alt="Amber apothecary jar with green lid, cardamom, saffron, dried herbal roots, and brass spoon"
+            className="hidden sm:block absolute inset-0 w-full h-full object-cover object-center opacity-25 pointer-events-none"
           />
+          <div
+            className="hidden sm:block absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                'linear-gradient(180deg, rgba(245,240,230,0.92) 0%, rgba(245,240,230,0.68) 55%, rgba(245,240,230,0.94) 100%)',
+            }}
+          />
+
+          <div className="relative z-10 space-y-6">
+            <div className="inline-flex items-center px-3 py-1.5 rounded-lg bg-white border border-ifaqa-plum/10">
+              <img
+                src="/images/logo-framed.jpg"
+                alt="IFAQA Herbal Remedies"
+                className="h-9 w-auto object-contain"
+              />
+            </div>
+
+            <div className="space-y-2 max-w-md">
+              <p className="text-xs font-medium text-[#5A6962]">
+                Saharanpur botanical house
+              </p>
+              <h1 className="font-serif font-normal text-3xl sm:text-4xl text-ifaqa-plum leading-[1.15]">
+                Dispensary operations portal
+              </h1>
+              <p className="text-sm text-[#3E524A] leading-relaxed">
+                Manage formulations, health categories, storefront banners, customer orders, product reviews, and support tickets in one place.
+              </p>
+            </div>
+          </div>
+
+          <div className="relative z-10 pt-6 grid grid-cols-3 gap-4 border-t border-ifaqa-plum/10 text-xs">
+            <div>
+              <div className="font-serif text-lg text-ifaqa-plum tabular-nums">31</div>
+              <div className="text-[#5A6962]">Remedies</div>
+            </div>
+            <div>
+              <div className="font-serif text-lg text-ifaqa-plum tabular-nums">6</div>
+              <div className="text-[#5A6962]">Categories</div>
+            </div>
+            <div>
+              <div className="font-serif text-lg text-ifaqa-plum tabular-nums">INR ₹</div>
+              <div className="text-[#5A6962]">Dispatch currency</div>
+            </div>
+          </div>
         </div>
-        <h1 className="font-serif text-lg font-bold tracking-[0.2em] uppercase">
-          IFAQA HERBAL REMEDIES
-        </h1>
-        <p className="text-xs font-mono tracking-widest text-[#C7A9A3] uppercase mt-1">
-          Administrative Management Portal
-        </p>
-        <div className="mt-3 inline-flex items-center gap-1.5 px-2.5 py-0.5 border border-[#C7A9A3]/30 bg-[#6B5560]/30 text-[10px] font-mono text-[#C7A9A3]">
-          <Shield className="w-3 h-3 text-emerald-400" />
-          <span>PORT 3001 &bull; RESTRICTED ACCESS</span>
+
+        {/* Right Sign-in Form */}
+        <div className="lg:col-span-6 p-7 sm:p-10 lg:p-12 flex flex-col justify-center">
+          <div className="w-full max-w-md mx-auto space-y-6">
+            <div>
+              <h2 className="font-serif font-normal text-2xl sm:text-3xl text-ifaqa-plum">
+                Sign in to admin
+              </h2>
+              <p className="text-sm text-[#5A6962] mt-1">
+                Use your staff email or verified mobile number
+              </p>
+            </div>
+
+            {(localError || authError) && (
+              <div className="p-3.5 rounded-lg border border-red-200 bg-red-50 text-red-900 text-xs flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-red-700 shrink-0 mt-0.5" strokeWidth={1.5} />
+                <span>{localError || authError}</span>
+              </div>
+            )}
+
+            {/* Segmented Control */}
+            <div className="grid grid-cols-2 gap-1 p-1 rounded-lg bg-ifaqa-cashmere border border-ifaqa-plum/10 text-xs font-medium">
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('credentials');
+                  setLocalError(null);
+                }}
+                className={`h-9 rounded-md transition-colors flex items-center justify-center gap-2 ${
+                  activeTab === 'credentials'
+                    ? 'bg-white text-ifaqa-plum shadow-luxury-card'
+                    : 'text-[#5A6962] hover:text-ifaqa-plum'
+                }`}
+              >
+                <KeyRound className="w-3.5 h-3.5" strokeWidth={1.5} />
+                <span>Email & password</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('otp');
+                  setLocalError(null);
+                }}
+                className={`h-9 rounded-md transition-colors flex items-center justify-center gap-2 ${
+                  activeTab === 'otp'
+                    ? 'bg-white text-ifaqa-plum shadow-luxury-card'
+                    : 'text-[#5A6962] hover:text-ifaqa-plum'
+                }`}
+              >
+                <Phone className="w-3.5 h-3.5" strokeWidth={1.5} />
+                <span>Phone OTP</span>
+              </button>
+            </div>
+
+            {activeTab === 'credentials' && (
+              <form onSubmit={handleCredentialsSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-medium text-ifaqa-plum">
+                    Staff email address
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="admin@ifaqaremedies.com"
+                    className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-ifaqa-plum/15 text-sm text-ifaqa-plum focus:outline-none focus:border-ifaqa-plum focus:ring-2 focus:ring-ifaqa-plum/15"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-medium text-ifaqa-plum">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••••••"
+                      className="w-full px-3.5 py-2.5 pr-10 rounded-lg bg-white border border-ifaqa-plum/15 text-sm text-ifaqa-plum focus:outline-none focus:border-ifaqa-plum focus:ring-2 focus:ring-ifaqa-plum/15"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-[#5A6962] hover:text-ifaqa-plum"
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" strokeWidth={1.5} />
+                      ) : (
+                        <Eye className="w-4 h-4" strokeWidth={1.5} />
+                      )}
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-11 rounded-lg bg-ifaqa-plum text-ifaqa-linen text-sm font-medium hover:bg-[#165A45] transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                >
+                  <Lock className="w-4 h-4" strokeWidth={1.5} />
+                  <span>{loading ? 'Signing in...' : 'Sign in to workspace'}</span>
+                </button>
+              </form>
+            )}
+
+            {activeTab === 'otp' && (
+              <form onSubmit={handleOtpSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-medium text-ifaqa-plum">
+                    Registered staff mobile
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="+919729840336"
+                    className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-ifaqa-plum/15 text-sm font-mono tabular-nums text-ifaqa-plum focus:outline-none focus:border-ifaqa-plum focus:ring-2 focus:ring-ifaqa-plum/15"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-medium text-ifaqa-plum">
+                    6-digit verification code
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={6}
+                    required
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    placeholder="123456"
+                    className="w-full px-3.5 py-2.5 rounded-lg bg-white border border-ifaqa-plum/15 text-sm font-mono tracking-widest tabular-nums text-ifaqa-plum focus:outline-none focus:border-ifaqa-plum focus:ring-2 focus:ring-ifaqa-plum/15"
+                  />
+                  <p className="text-xs text-[#5A6962]">
+                    Local test code: <span className="font-mono text-ifaqa-plum">123456</span>
+                  </p>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-11 rounded-lg bg-ifaqa-plum text-ifaqa-linen text-sm font-medium hover:bg-[#165A45] transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                >
+                  <span>{loading ? 'Verifying...' : 'Verify & sign in'}</span>
+                  <ArrowRight className="w-4 h-4" strokeWidth={1.5} />
+                </button>
+              </form>
+            )}
+
+            <div className="pt-4 border-t border-ifaqa-plum/10 flex items-center justify-between text-xs">
+              <span className="text-[#5A6962]">Demo access</span>
+              <button
+                type="button"
+                onClick={fillChiefHakeemDemo}
+                className="text-ifaqa-plum font-medium hover:text-[#165A45] underline"
+              >
+                Use staff test credentials
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-
-      {/* Alerts */}
-      {(localError || authError) && (
-        <div className="p-4 bg-red-50 border-b border-red-200 text-red-900 text-xs flex items-start gap-2.5">
-          <AlertCircle className="w-4 h-4 text-red-700 flex-shrink-0 mt-0.5" />
-          <span className="font-medium">{localError || authError}</span>
-        </div>
-      )}
-
-      {/* Tab Switcher (Sharp rectangular tabs, ZERO PILLS) */}
-      <div className="grid grid-cols-2 border-b border-[#C7A9A3]/40 bg-[#E8D2C4]/20 text-xs font-serif uppercase tracking-wider">
-        <button
-          type="button"
-          onClick={() => { setActiveTab('credentials'); setLocalError(null); }}
-          className={`py-3 text-center font-semibold transition-colors flex items-center justify-center gap-2 ${
-            activeTab === 'credentials'
-              ? 'bg-[#F7EFE7] text-[#3E3239] border-b-2 border-[#3E3239]'
-              : 'text-[#6B5560] hover:text-[#3E3239]'
-          }`}
-        >
-          <KeyRound className="w-3.5 h-3.5" />
-          <span>Credentials</span>
-        </button>
-        <button
-          type="button"
-          onClick={() => { setActiveTab('otp'); setLocalError(null); }}
-          className={`py-3 text-center font-semibold transition-colors flex items-center justify-center gap-2 ${
-            activeTab === 'otp'
-              ? 'bg-[#F7EFE7] text-[#3E3239] border-b-2 border-[#3E3239]'
-              : 'text-[#6B5560] hover:text-[#3E3239]'
-          }`}
-        >
-          <Phone className="w-3.5 h-3.5" />
-          <span>Phone OTP</span>
-        </button>
-      </div>
-
-      {/* Tab 1: Credentials Form */}
-      {activeTab === 'credentials' && (
-        <form onSubmit={handleCredentialsSubmit} className="p-8 space-y-5">
-          <div className="space-y-1">
-            <label className="block text-xs font-mono uppercase tracking-wider text-[#3E3239]">
-              Admin Email / Whitelist Identifier
-            </label>
-            <input
-              type="text"
-              required
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="admin@ifaqaremedies.com"
-              className="w-full px-3.5 py-2.5 bg-[#F7EFE7] border border-[#C7A9A3] text-sm text-[#3E3239] focus:outline-none focus:border-[#3E3239]"
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="block text-xs font-mono uppercase tracking-wider text-[#3E3239]">
-              Password
-            </label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="••••••••••••"
-              className="w-full px-3.5 py-2.5 bg-[#F7EFE7] border border-[#C7A9A3] text-sm text-[#3E3239] focus:outline-none focus:border-[#3E3239]"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 border border-[#3E3239] bg-[#3E3239] text-[#F7EFE7] text-xs font-serif uppercase tracking-widest font-bold hover:bg-[#6B5560] transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
-          >
-            <Lock className="w-4 h-4" />
-            <span>{loading ? 'Authenticating...' : 'Enter Dispensary Governance'}</span>
-          </button>
-        </form>
-      )}
-
-      {/* Tab 2: Phone OTP Form */}
-      {activeTab === 'otp' && (
-        <form onSubmit={handleOtpSubmit} className="p-8 space-y-5">
-          <div className="space-y-1">
-            <label className="block text-xs font-mono uppercase tracking-wider text-[#3E3239]">
-              Registered Admin Phone (e.g. +923001234567)
-            </label>
-            <input
-              type="text"
-              required
-              value={phone}
-              onChange={e => setPhone(e.target.value)}
-              placeholder="+923001234567 or 03001234567"
-              className="w-full px-3.5 py-2.5 bg-[#F7EFE7] border border-[#C7A9A3] text-sm text-[#3E3239] focus:outline-none focus:border-[#3E3239]"
-            />
-          </div>
-          <div className="space-y-1">
-            <label className="block text-xs font-mono uppercase tracking-wider text-[#3E3239]">
-              6-Digit Security Code (OTP)
-            </label>
-            <input
-              type="text"
-              maxLength={6}
-              required
-              value={otp}
-              onChange={e => setOtp(e.target.value)}
-              placeholder="123456"
-              className="w-full px-3.5 py-2.5 bg-[#F7EFE7] border border-[#C7A9A3] text-sm font-mono tracking-widest text-[#3E3239] focus:outline-none focus:border-[#3E3239]"
-            />
-            <p className="text-[11px] text-[#9E8189]">
-              Demo verification code: <code className="font-mono font-bold text-[#3E3239]">123456</code>
-            </p>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 border border-[#3E3239] bg-[#3E3239] text-[#F7EFE7] text-xs font-serif uppercase tracking-widest font-bold hover:bg-[#6B5560] transition-colors disabled:opacity-50 flex items-center justify-center gap-2 shadow-sm"
-          >
-            <Phone className="w-4 h-4" />
-            <span>{loading ? 'Verifying OTP...' : 'Verify & Authorize'}</span>
-          </button>
-        </form>
-      )}
-
-      {/* Quick Demo Credentials Footer */}
-      <div className="p-4 border-t border-[#C7A9A3]/40 bg-[#E8D2C4]/20 text-center">
-        <button
-          type="button"
-          onClick={fillChiefHakeemDemo}
-          className="text-xs font-serif text-[#6B5560] hover:text-[#3E3239] underline tracking-wider"
-        >
-          Pre-fill Chief Hakeem Tariq Demo Credentials
-        </button>
       </div>
     </div>
   );
@@ -220,16 +288,14 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen bg-[#F7EFE7] flex flex-col justify-center items-center p-6 relative">
-      <div className="absolute inset-0 bg-gradient-mauve-reserve opacity-5 pointer-events-none" />
-      <Suspense fallback={
-        <div className="w-full max-w-md bg-[#F7EFE7] border border-[#C7A9A3] p-12 text-center text-[#3E3239]">
-          <div className="w-8 h-8 border-2 border-[#C7A9A3] border-t-[#3E3239] animate-spin mx-auto mb-4" />
-          <span className="font-serif text-sm tracking-wider uppercase">Loading Portal Access...</span>
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-ifaqa-linen flex items-center justify-center p-6">
+          <span className="text-sm text-[#5A6962]">Loading sign in</span>
         </div>
-      }>
-        <LoginForm />
-      </Suspense>
-    </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

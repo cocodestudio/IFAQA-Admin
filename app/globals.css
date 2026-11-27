@@ -2,27 +2,152 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer utilities {
-  /* Chamfered Heritage polygon clip-path pattern (Zero-Pill Compliant) */
-  .chamfer-badge {
-    clip-path: polygon(6px 0%, calc(100% - 6px) 0%, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0% calc(100% - 6px), 0% 6px);
+:root {
+  --color-ifaqa-plum: #0B2D22;
+  --color-ifaqa-blackberry: #165A45;
+  --color-ifaqa-mauve: #C5A059;
+  --color-ifaqa-sand: #DFBA73;
+  --color-ifaqa-cashmere: #F5F0E6;
+  --color-ifaqa-linen: #FAF8F5;
+  --color-ink-hairline: rgba(11, 45, 34, 0.1);
+  --color-ink-muted: #5A6962;
+  --ease-unslop: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html,
+body {
+  background-color: #FAF8F5;
+  color: #0B2D22;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input,
+textarea,
+select,
+[contenteditable='true'] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+::selection {
+  background-color: #0B2D22;
+  color: #FAF8F5;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tailored Architectural Badge Utilities (Zero-Pills) */
+.chamfer-badge {
+  clip-path: polygon(
+    4px 0%,
+    calc(100% - 4px) 0%,
+    100% 4px,
+    100% calc(100% - 4px),
+    calc(100% - 4px) 100%,
+    4px 100%,
+    0% calc(100% - 4px),
+    0% 4px
+  );
+  border-radius: 0px;
+  white-space: nowrap;
+}
+
+.chamfer-card {
+  clip-path: polygon(
+    12px 0%,
+    calc(100% - 12px) 0%,
+    100% 12px,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    12px 100%,
+    0% calc(100% - 12px),
+    0% 12px
+  );
+}
+
+.shadow-luxury-card {
+  box-shadow: 0 1px 2px rgba(11, 45, 34, 0.05);
+}
+
+.shadow-luxury-lifted {
+  box-shadow: 0 8px 24px rgba(11, 45, 34, 0.07);
+}
+
+/* Smooth page & card transitions */
+@keyframes adminEnter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
   }
-  .chamfer-card {
-    clip-path: polygon(12px 0%, calc(100% - 12px) 0%, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 12px 100%, 0% calc(100% - 12px), 0% 12px);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-/* Custom luxury scrollbars */
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(250%);
+  }
+}
+
+.admin-enter {
+  animation: adminEnter 260ms var(--ease-unslop) both;
+}
+
+/* Quiet Hairline Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
-  background: #F7EFE7;
+  background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
-  background: #C7A9A3;
+  background: rgba(11, 45, 34, 0.14);
+  border-radius: 3px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
-  background: #9E8189;
+  background: rgba(11, 45, 34, 0.28);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  aside,
+  header,
+  .print\:hidden {
+    display: none !important;
+  }
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
 }

@@ -1,62 +1,87 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LogOut } from 'lucide-react';
+import { Menu, ChevronRight } from 'lucide-react';
 import { useAdminAuth } from '@/lib/admin-auth';
 
-export function AdminHeader() {
+interface AdminHeaderProps {
+  onOpenMobileNav?: () => void;
+}
+
+export function AdminHeader({ onOpenMobileNav }: AdminHeaderProps) {
   const pathname = usePathname();
-  const { session, logout } = useAdminAuth();
+  const { session, preferences } = useAdminAuth();
 
   const getPageTitle = () => {
-    if (pathname === '/') return 'Dispensary Governance Overview';
-    if (pathname === '/remedies') return 'Classical Herbal Formulations';
-    if (pathname === '/remedies/new') return 'Compound New Formulation';
-    if (pathname.includes('/remedies/') && pathname.includes('/edit')) return 'Edit Formulation Spec';
-    if (pathname === '/banners') return 'Promotional Hero & Announcement Banners';
-    if (pathname === '/orders') return 'Customer Order Fulfillment Pipeline';
-    if (pathname.startsWith('/orders/')) return 'Dispensary Order Compounding Spec';
-    return 'Administrative Portal';
+    if (pathname === '/') return 'Dispensary overview';
+    if (pathname === '/remedies') return 'Herbal remedies';
+    if (pathname === '/remedies/new') return 'Add herbal remedy';
+    if (pathname.includes('/remedies/') && pathname.includes('/edit')) return 'Edit remedy';
+    if (pathname === '/categories') return 'Health categories';
+    if (pathname.includes('/categories/') && pathname.includes('/edit')) return 'Edit category';
+    if (pathname === '/banners') return 'Storefront banners';
+    if (pathname === '/banners/new') return 'Create banner';
+    if (pathname.includes('/banners/') && pathname.includes('/edit')) return 'Edit banner';
+    if (pathname === '/orders') return 'Customer orders';
+    if (pathname.startsWith('/orders/')) return 'Order fulfillment';
+    if (pathname === '/reviews') return 'Product reviews';
+    if (pathname === '/customers') return 'Customers';
+    if (pathname.startsWith('/customers/')) return 'Customer profile';
+    if (pathname === '/support') return 'Support tickets';
+    if (pathname.startsWith('/support/')) return 'Support ticket';
+    if (pathname === '/account') return 'My account';
+    return 'Admin portal';
   };
 
+  const initials = (session?.displayName || 'Chief Hakeem')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join('');
+
   return (
-    <header className="h-16 px-6 border-b border-[#C7A9A3]/30 bg-[#F7EFE7] flex items-center justify-between sticky top-0 z-20">
-      <div className="flex items-center gap-3">
-        <h1 className="font-serif text-lg font-semibold text-[#3E3239] tracking-wide">
+    <header className="h-16 px-4 sm:px-6 lg:px-8 border-b border-ifaqa-plum/10 bg-ifaqa-linen/95 backdrop-blur-sm flex items-center justify-between sticky top-0 z-20 print:hidden">
+      <div className="flex items-center gap-3 min-w-0">
+        {onOpenMobileNav && (
+          <button
+            type="button"
+            onClick={onOpenMobileNav}
+            className="lg:hidden w-9 h-9 rounded-lg border border-ifaqa-plum/15 bg-white flex items-center justify-center text-ifaqa-plum hover:bg-ifaqa-cashmere transition-colors shrink-0"
+            aria-label="Open menu"
+          >
+            <Menu className="w-4 h-4" strokeWidth={1.6} />
+          </button>
+        )}
+        <h1 className="font-serif font-normal text-xl sm:text-2xl text-ifaqa-plum truncate">
           {getPageTitle()}
         </h1>
       </div>
 
-      <div className="flex items-center gap-4">
-        {/* Live Dispensary Health Indicator (Sharp border-l-2 RuledBadge style, ZERO PILLS) */}
-        <span className="inline-flex items-center gap-1.5 pl-2 pr-3 py-1 border-l-2 border-l-emerald-600 bg-emerald-50 text-xs font-mono text-emerald-900">
-          <span className="inline-block w-2 h-2 bg-emerald-600 animate-pulse" />
-          <span>DISPENSARY LIVE</span>
-        </span>
-
-        {/* Super Admin Profile */}
-        <div className="flex items-center gap-2 pl-3 border-l border-[#C7A9A3]/40">
-          <div className="w-8 h-8 border border-[#3E3239] bg-[#3E3239] text-[#F7EFE7] flex items-center justify-center font-serif text-xs font-bold">
-            HT
-          </div>
-          <div className="flex flex-col text-left">
-            <span className="text-xs font-medium text-[#3E3239]">
-              {session?.displayName || 'Chief Hakeem Tariq'}
-            </span>
-            <span className="text-[10px] font-mono text-[#6B5560] uppercase">
-              Super Admin
-            </span>
-          </div>
-          <button
-            onClick={logout}
-            className="ml-3 p-1.5 text-[#6B5560] hover:text-[#3E3239] hover:bg-[#C7A9A3]/20 transition-colors"
-            title="Sign Out of Portal"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
+      {/* Clickable Chief Hakeem Profile Chip -> /account */}
+      <Link
+        href="/account"
+        className="flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl border border-transparent hover:border-ifaqa-plum/15 hover:bg-white transition-colors shrink-0 group"
+        title="Open my account"
+      >
+        <div className="w-8 h-8 rounded-lg bg-ifaqa-plum text-ifaqa-linen flex items-center justify-center font-serif text-xs font-medium shrink-0">
+          {initials || 'HT'}
         </div>
-      </div>
+        <div className="hidden sm:flex flex-col text-left leading-tight">
+          <span className="text-xs font-medium text-ifaqa-plum group-hover:text-[#165A45] transition-colors">
+            {session?.displayName || 'Chief Hakeem Tariq'}
+          </span>
+          <span className="text-[11px] text-[#5A6962]">
+            {preferences.designation || 'Administrator'}
+          </span>
+        </div>
+        <ChevronRight
+          className="w-3.5 h-3.5 text-[#5A6962] group-hover:text-ifaqa-plum group-hover:translate-x-0.5 transition-all"
+          strokeWidth={1.6}
+        />
+      </Link>
     </header>
   );
 }

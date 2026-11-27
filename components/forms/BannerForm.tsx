@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import { PromotionalBanner, BannerGradient, BannerPlacement, BannerTextAlignment } from '@/lib/types';
+import { uploadMedia } from '@/lib/storage-service';
 import { FormInput, FormSelect } from '../ui/FormInput';
-import { AlertCircle, Save } from 'lucide-react';
+import { AlertCircle, Save, Upload, ArrowRight } from 'lucide-react';
 
 interface BannerFormProps {
   initialData?: PromotionalBanner;
@@ -16,7 +17,7 @@ export function BannerForm({
   initialData,
   onSubmit,
   onCancel,
-  loading = false
+  loading = false,
 }: BannerFormProps) {
   const [formData, setFormData] = useState<{
     headline: string;
@@ -35,18 +36,34 @@ export function BannerForm({
     headline: initialData?.headline || '',
     subheadline: initialData?.subheadline || '',
     badgeText: initialData?.badgeText || 'Classical Heritage',
-    ctaText: initialData?.ctaText || 'Explore Remedies',
+    ctaText: initialData?.ctaText || 'Explore remedies',
     ctaLink: initialData?.ctaLink || '/catalog',
-    imageUrl: initialData?.imageUrl || '/banners/hero-desktop.jpg',
+    imageUrl: initialData?.imageUrl || '/images/hero-botanical.jpg',
     gradientOverlay: initialData?.gradientOverlay || 'mauve-reserve',
     textAlignment: initialData?.textAlignment || 'left',
     placement: initialData?.placement || 'hero',
     priorityOrder: initialData?.priorityOrder ?? 1,
     isActive: initialData?.isActive !== false,
-    endDate: ''
+    endDate: '',
   });
 
   const [error, setError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    setError(null);
+    try {
+      const url = await uploadMedia(file, `banners/${Date.now()}_${file.name}`);
+      setFormData((prev) => ({ ...prev, imageUrl: url }));
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to upload banner artwork');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,143 +87,239 @@ export function BannerForm({
     try {
       await onSubmit(formData);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to save banner';
-      setError(msg);
+      setError(err instanceof Error ? err.message : 'Failed to save banner');
     }
   };
 
+  const alignClass =
+    formData.textAlignment === 'center'
+      ? 'items-center text-center'
+      : formData.textAlignment === 'right'
+      ? 'items-end text-right'
+      : 'items-start text-left';
+
+  const bgGradient =
+    formData.gradientOverlay === 'steel-night'
+      ? 'linear-gradient(145deg, rgba(14,59,45,0.92) 0%, rgba(6,24,17,0.88) 100%)'
+      : formData.gradientOverlay === 'mauve-reserve'
+      ? 'linear-gradient(135deg, rgba(22,90,69,0.9) 0%, rgba(11,45,34,0.88) 100%)'
+      : 'linear-gradient(135deg, rgba(11,45,34,0.6) 0%, rgba(11,45,34,0.45) 100%)';
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {error && (
-        <div className="p-3 border-l-4 border-red-700 bg-red-50 text-red-900 text-xs flex items-center gap-2">
-          <AlertCircle className="w-4 h-4 flex-shrink-0" />
-          <span>{error}</span>
+    <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start w-full">
+      {/* Left: Form Editor */}
+      <form
+        onSubmit={handleSubmit}
+        className="xl:col-span-7 p-5 sm:p-6 bg-white rounded-xl border border-ifaqa-plum/10 shadow-luxury-card space-y-5"
+      >
+        {error && (
+          <div className="p-3.5 rounded-lg border border-red-200 bg-red-50 text-red-900 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-red-700" strokeWidth={1.6} />
+            <span>{error}</span>
+          </div>
+        )}
+
+        <FormInput
+          label="Banner headline *"
+          required
+          value={formData.headline}
+          onChange={(e) => setFormData({ ...formData, headline: e.target.value })}
+          placeholder="Pure Unani and Ayurvedic herbal remedies"
+        />
+
+        <FormInput
+          label="Subheadline"
+          value={formData.subheadline}
+          onChange={(e) => setFormData({ ...formData, subheadline: e.target.value })}
+          placeholder="Small-batch formulations prepared cleanly in Saharanpur"
+        />
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <FormInput
+            label="Eyebrow badge text"
+            value={formData.badgeText}
+            onChange={(e) => setFormData({ ...formData, badgeText: e.target.value })}
+            placeholder="Seasonal harvest"
+          />
+          <FormSelect
+            label="Placement on storefront"
+            value={formData.placement}
+            onChange={(e) =>
+              setFormData({ ...formData, placement: e.target.value as BannerPlacement })
+            }
+          >
+            <option value="hero">Homepage hero banner</option>
+            <option value="announcement_bar">Top announcement bar</option>
+            <option value="mid_page_feature">Mid-page feature strip</option>
+          </FormSelect>
         </div>
-      )}
 
-      <FormInput
-        label="Promotional Headline *"
-        required
-        value={formData.headline}
-        onChange={e => setFormData({ ...formData, headline: e.target.value })}
-        placeholder="e.g. Imperial Dawakhana Formulations"
-      />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <FormInput
+            label="Button label"
+            value={formData.ctaText}
+            onChange={(e) => setFormData({ ...formData, ctaText: e.target.value })}
+            placeholder="Shop products"
+          />
+          <FormInput
+            label="Destination route"
+            value={formData.ctaLink}
+            onChange={(e) => setFormData({ ...formData, ctaLink: e.target.value })}
+            placeholder="/catalog/muqawwi"
+          />
+        </div>
 
-      <FormInput
-        label="Subheadline / Teaser"
-        value={formData.subheadline}
-        onChange={e => setFormData({ ...formData, subheadline: e.target.value })}
-        placeholder="e.g. Formulated with 24K Gold Calx & Wild Himalayan Saffron"
-      />
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <FormSelect
+            label="Color treatment"
+            value={formData.gradientOverlay}
+            onChange={(e) =>
+              setFormData({ ...formData, gradientOverlay: e.target.value as BannerGradient })
+            }
+          >
+            <option value="mauve-reserve">Botanical spruce (#165A45 → #0B2D22)</option>
+            <option value="steel-night">Deep forest night (#0E3B2D → #061811)</option>
+            <option value="none">Clean artwork only</option>
+          </FormSelect>
+          <FormSelect
+            label="Text alignment"
+            value={formData.textAlignment}
+            onChange={(e) =>
+              setFormData({ ...formData, textAlignment: e.target.value as BannerTextAlignment })
+            }
+          >
+            <option value="left">Start aligned</option>
+            <option value="center">Centered</option>
+            <option value="right">End aligned</option>
+          </FormSelect>
+          <FormInput
+            label="Display priority"
+            type="number"
+            min="0"
+            className="font-mono tabular-nums"
+            value={formData.priorityOrder}
+            onChange={(e) =>
+              setFormData({ ...formData, priorityOrder: parseInt(e.target.value, 10) || 0 })
+            }
+          />
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormInput
-          label="Architectural Badge Text"
-          value={formData.badgeText}
-          onChange={e => setFormData({ ...formData, badgeText: e.target.value })}
-          placeholder="HERITAGE HARVEST 2026"
-        />
-        <FormSelect
-          label="Placement Target"
-          value={formData.placement}
-          onChange={e => setFormData({ ...formData, placement: e.target.value as BannerPlacement })}
-        >
-          <option value="hero">Homepage Hero Banner</option>
-          <option value="announcement_bar">Top Announcement Bar</option>
-          <option value="mid_page_feature">Mid-Page Feature Banner</option>
-        </FormSelect>
-      </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
+          <FormInput
+            label="Banner image URL"
+            value={formData.imageUrl}
+            onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+            placeholder="/images/hero-botanical.jpg"
+          />
+          <div className="space-y-1.5">
+            <span className="block text-xs font-medium text-ifaqa-plum">Or upload artwork</span>
+            <label className="h-[42px] px-3.5 rounded-lg border border-ifaqa-plum/15 bg-ifaqa-linen hover:bg-ifaqa-cashmere text-xs font-medium text-ifaqa-plum cursor-pointer flex items-center justify-center gap-2 transition-colors">
+              <Upload className="w-4 h-4 text-[#5A6962]" strokeWidth={1.6} />
+              <span>{uploading ? 'Uploading...' : 'Choose JPG, PNG or WebP'}</span>
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+            </label>
+          </div>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormInput
-          label="CTA Button Text"
-          value={formData.ctaText}
-          onChange={e => setFormData({ ...formData, ctaText: e.target.value })}
-          placeholder="Explore Remedies"
-        />
-        <FormInput
-          label="CTA Link / Route"
-          value={formData.ctaLink}
-          onChange={e => setFormData({ ...formData, ctaLink: e.target.value })}
-          placeholder="/catalog/muqawwi"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <FormSelect
-          label="Gradient Overlay"
-          value={formData.gradientOverlay}
-          onChange={e => setFormData({ ...formData, gradientOverlay: e.target.value as BannerGradient })}
-        >
-          <option value="mauve-reserve">Mauve Reserve (#B2949D to #6B5F6F)</option>
-          <option value="steel-night">Steel Night (#88A2BF to #141318)</option>
-          <option value="none">None (Clean Artwork)</option>
-        </FormSelect>
-        <FormSelect
-          label="Text Alignment"
-          value={formData.textAlignment}
-          onChange={e => setFormData({ ...formData, textAlignment: e.target.value as BannerTextAlignment })}
-        >
-          <option value="left">Left Aligned</option>
-          <option value="center">Centered</option>
-          <option value="right">Right Aligned</option>
-        </FormSelect>
-        <FormInput
-          label="Priority Sequence (0 = Top)"
-          type="number"
-          min="0"
-          value={formData.priorityOrder}
-          onChange={e => setFormData({ ...formData, priorityOrder: parseInt(e.target.value, 10) || 0 })}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <FormInput
-          label="Background Image URL"
-          value={formData.imageUrl}
-          onChange={e => setFormData({ ...formData, imageUrl: e.target.value })}
-          placeholder="/banners/hero-desktop.jpg"
-        />
-        <FormInput
-          label="Campaign Expiry (Optional)"
+          label="Campaign end date (optional)"
           type="date"
           value={formData.endDate}
-          onChange={e => setFormData({ ...formData, endDate: e.target.value })}
-          helperText="Must not be in the past."
+          onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+          helperText="Leave blank to keep active until hidden manually"
         />
-      </div>
 
-      <div className="pt-2">
-        <label className="flex items-center gap-3 cursor-pointer">
+        <label className="inline-flex items-center gap-2.5 cursor-pointer text-sm text-ifaqa-plum pt-1">
           <input
             type="checkbox"
             checked={formData.isActive}
-            onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
-            className="w-4 h-4 accent-[#3E3239]"
+            onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
+            className="w-4 h-4 rounded accent-[#0B2D22]"
           />
-          <span className="text-xs font-serif uppercase tracking-wider text-[#3E3239] font-medium">
-            Active in Storefront Display
-          </span>
+          <span>Publish banner on storefront</span>
         </label>
-      </div>
 
-      <div className="flex items-center justify-end gap-3 pt-4 border-t border-[#C7A9A3]/30">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-4 py-2 border border-[#C7A9A3] text-xs font-serif uppercase tracking-wider text-[#3E3239] hover:bg-[#E8D2C4]/30 transition-colors"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={loading}
-          className="inline-flex items-center gap-2 px-6 py-2 border border-[#3E3239] bg-[#3E3239] text-[#F7EFE7] text-xs font-serif uppercase tracking-wider font-semibold hover:bg-[#6B5560] transition-colors disabled:opacity-50"
-        >
-          <Save className="w-4 h-4" />
-          <span>{loading ? 'Saving...' : 'Save Banner'}</span>
-        </button>
+        <div className="flex items-center justify-end gap-3 pt-4 border-t border-ifaqa-plum/10">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="h-10 px-4 rounded-lg border border-ifaqa-plum/15 bg-white text-sm font-medium text-ifaqa-plum hover:bg-ifaqa-cashmere transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            type="submit"
+            disabled={loading || uploading}
+            className="h-10 px-6 rounded-lg bg-ifaqa-plum text-ifaqa-linen text-sm font-medium hover:bg-[#165A45] transition-colors disabled:opacity-50 inline-flex items-center gap-2"
+          >
+            <Save className="w-4 h-4" strokeWidth={1.6} />
+            <span>{loading ? 'Saving...' : 'Save banner'}</span>
+          </button>
+        </div>
+      </form>
+
+      {/* Right: Live Storefront Preview */}
+      <div className="xl:col-span-5 xl:sticky xl:top-24 p-5 sm:p-6 bg-white rounded-xl border border-ifaqa-plum/10 shadow-luxury-card space-y-4">
+        <div className="flex items-center justify-between border-b border-ifaqa-plum/10 pb-3">
+          <div>
+            <h3 className="font-serif font-normal text-lg text-ifaqa-plum">
+              Live storefront preview
+            </h3>
+            <p className="text-xs text-[#5A6962]">
+              Target: {formData.placement.replace(/_/g, ' ')} • Priority #{formData.priorityOrder}
+            </p>
+          </div>
+          <span
+            className={`px-2.5 py-0.5 rounded-md text-xs font-medium ${
+              formData.isActive
+                ? 'bg-[#EEF4F1] text-ifaqa-plum'
+                : 'bg-ifaqa-linen text-[#5A6962]'
+            }`}
+          >
+            {formData.isActive ? 'Published' : 'Draft'}
+          </span>
+        </div>
+
+        <div className="relative rounded-xl overflow-hidden min-h-[260px] flex flex-col justify-center p-6 sm:p-8 border border-ifaqa-plum/10 bg-[#0B2D22]">
+          {formData.imageUrl && (
+            <img
+              src={formData.imageUrl}
+              alt="Banner artwork preview"
+              className="absolute inset-0 w-full h-full object-cover opacity-55"
+            />
+          )}
+          <div className="absolute inset-0" style={{ background: bgGradient }} />
+
+          <div className={`relative z-10 flex flex-col gap-3 ${alignClass}`}>
+            {formData.badgeText && (
+              <span className="inline-flex px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-[#FAF5EC]/95 text-ifaqa-plum border border-ifaqa-sand">
+                {formData.badgeText}
+              </span>
+            )}
+            <h4 className="font-serif font-normal text-2xl sm:text-3xl text-ifaqa-linen leading-tight">
+              {formData.headline || 'Banner headline preview'}
+            </h4>
+            {formData.subheadline && (
+              <p className="text-xs sm:text-sm text-ifaqa-linen/85 max-w-md leading-relaxed">
+                {formData.subheadline}
+              </p>
+            )}
+            {formData.ctaText && (
+              <div className="pt-1">
+                <span className="inline-flex items-center gap-1.5 h-9 px-4 rounded-lg bg-ifaqa-mauve text-[#0F1714] text-xs font-medium">
+                  <span>{formData.ctaText}</span>
+                  <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.6} />
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
-    </form>
+    </div>
   );
 }

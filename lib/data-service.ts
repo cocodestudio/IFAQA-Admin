@@ -456,6 +456,58 @@ export async function getAilmentsAsync(forceRefresh = false): Promise<AilmentCat
   );
 }
 
+export async function createAilment(
+  data: Omit<AilmentCategory, 'id' | 'createdAt' | 'updatedAt'> & { id?: string }
+): Promise<AilmentCategory> {
+  const cleanSlug = (data.slug || data.name || 'category')
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '') || `category-${Date.now()}`;
+
+  const now = new Date().toISOString();
+  const id = (data.id || cleanSlug) as AilmentCategory['id'];
+  const newCategory: AilmentCategory = {
+    ...data,
+    id,
+    slug: cleanSlug,
+    urduName: data.urduName || data.name,
+    romanName: data.romanName || data.name,
+    tagline: data.tagline || '',
+    description: data.description || data.tagline || '',
+    iconIdentifier: data.iconIdentifier || 'leaf',
+    bannerImage: data.bannerImage || '/images/hero-mortar-botanical.webp',
+    displayOrder: Number.isFinite(data.displayOrder) ? data.displayOrder : 1,
+    remedyCount: data.remedyCount ?? 0,
+    isActive: data.isActive !== false,
+    createdAt: now,
+    updatedAt: now,
+  };
+
+  const db = getFirestoreDb();
+  if (db && !isMockFallback) {
+    try {
+      await setDoc(doc(db, 'ailments', id), stripUndefined(newCategory));
+    } catch (err) {
+      console.warn('Firestore createAilment failed:', err);
+      throw err;
+    }
+  }
+
+  invalidateAdminCache('ailments');
+  if (typeof window !== 'undefined') {
+    const storefrontBase = (process.env.NEXT_PUBLIC_STOREFRONT_URL || '').replace(/\/$/, '');
+    if (storefrontBase) {
+      void fetch(`${storefrontBase}/api/storefront?refresh=1`, { mode: 'no-cors' }).catch(() => {});
+    }
+  }
+  const existing = mockStore.getCategories();
+  if (existing.some((c) => c.id === id)) {
+    return mockStore.updateCategory(id, newCategory);
+  }
+  return mockStore.addCategory(newCategory);
+}
+
 export async function updateAilment(
   id: string,
   updates: Partial<AilmentCategory>
@@ -478,6 +530,12 @@ export async function updateAilment(
   }
 
   invalidateAdminCache('ailments');
+  if (typeof window !== 'undefined') {
+    const storefrontBase = (process.env.NEXT_PUBLIC_STOREFRONT_URL || '').replace(/\/$/, '');
+    if (storefrontBase) {
+      void fetch(`${storefrontBase}/api/storefront?refresh=1`, { mode: 'no-cors' }).catch(() => {});
+    }
+  }
   return mockStore.updateCategory(id, updates);
 }
 

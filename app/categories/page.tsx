@@ -8,7 +8,7 @@ import { usePagination } from '@/lib/use-pagination';
 import { Pagination } from '@/components/ui/Pagination';
 import { SearchField } from '@/components/ui/SearchField';
 import { RuledBadge } from '@/components/ui/ArchitecturalBadge';
-import { Edit, Eye, EyeOff, Tags, RefreshCw } from 'lucide-react';
+import { Edit, Eye, EyeOff, Tags, RefreshCw, Plus } from 'lucide-react';
 
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<AilmentCategory[]>([]);
@@ -83,7 +83,7 @@ export default function CategoriesPage() {
         <p className="text-sm text-[#5A6962]">
           Manage storefront health categories, bilingual labels, descriptions, and sort order
         </p>
-        <div className="flex items-center gap-3 self-start sm:self-auto">
+        <div className="flex flex-wrap items-center gap-3 self-start sm:self-auto">
           <span className="text-xs font-mono tabular-nums text-ifaqa-plum">
             {filteredCategories.length} categories shown
           </span>
@@ -96,6 +96,13 @@ export default function CategoriesPage() {
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} strokeWidth={1.6} />
             <span>Refresh</span>
           </button>
+          <Link
+            href="/categories/new"
+            className="h-8 px-3.5 rounded-lg bg-ifaqa-plum text-ifaqa-linen hover:bg-[#165A45] text-xs font-medium transition-colors inline-flex items-center gap-1.5"
+          >
+            <Plus className="w-3.5 h-3.5" strokeWidth={1.75} />
+            <span>Add category</span>
+          </Link>
         </div>
       </div>
 
@@ -137,31 +144,61 @@ export default function CategoriesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {paginatedItems.map((cat) => {
               const count = remedies.filter((r) => r.categoryId === cat.id).length || cat.remedyCount;
+              const hasCustomPhoto = Boolean(
+                cat.bannerImage &&
+                  (cat.bannerImage.startsWith('http') ||
+                    cat.bannerImage.startsWith('data:') ||
+                    cat.bannerImage.startsWith('/images/'))
+              );
+              const fallbackThumb = `/images/cat-${cat.slug}.webp`;
+              const displayThumb = hasCustomPhoto
+                ? cat.bannerImage
+                : ['hazim', 'muqawwi', 'sual', 'mafasil', 'jild', 'quwwat-e-mudafiat'].includes(cat.slug)
+                ? fallbackThumb
+                : '/images/hero-botanical.jpg';
             return (
               <div
                 key={cat.id}
-                className="p-5 bg-white rounded-xl border border-ifaqa-plum/10 shadow-luxury-card hover:border-ifaqa-plum/20 transition-colors flex flex-col justify-between space-y-4"
+                className="overflow-hidden bg-white rounded-xl border border-ifaqa-plum/10 shadow-luxury-card hover:border-ifaqa-plum/20 transition-colors flex flex-col justify-between"
               >
-                <div className="space-y-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2.5">
-                      <span className="w-8 h-8 rounded-lg bg-ifaqa-cashmere flex items-center justify-center text-ifaqa-plum shrink-0">
-                        <Tags className="w-4 h-4 text-[#5A6962]" strokeWidth={1.6} />
-                      </span>
-                      <span className="font-mono text-xs text-[#5A6962] tabular-nums">
+                <div className="relative h-28 bg-[#0B2D22] overflow-hidden">
+                  <img
+                    src={displayThumb}
+                    alt={cat.name}
+                    className="w-full h-full object-cover opacity-80"
+                  />
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      background:
+                        'linear-gradient(120deg, rgba(8,33,24,0.88) 0%, rgba(11,45,34,0.58) 60%, rgba(11,45,34,0.22) 100%)',
+                    }}
+                  />
+                  <div className="relative z-10 h-full p-4 flex flex-col justify-between">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-mono text-xs text-[#DFBA73] tabular-nums">
                         #{cat.displayOrder} • {cat.slug}
                       </span>
+                      <RuledBadge accentColor={cat.isActive ? 'emerald' : 'plum'}>
+                        {count} remedies
+                      </RuledBadge>
                     </div>
-                    <RuledBadge accentColor={cat.isActive ? 'emerald' : 'plum'}>
-                      {count} remedies
-                    </RuledBadge>
+                    <div className="flex items-end justify-between gap-2">
+                      <h3 className="font-serif text-base text-[#FAF8F5] truncate">{cat.name}</h3>
+                    </div>
                   </div>
+                </div>
 
-                  <div>
-                    <h3 className="font-serif text-lg text-ifaqa-plum">{cat.name}</h3>
+                <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-mono text-[#5A6962]">
+                      <Tags className="w-3.5 h-3.5" strokeWidth={1.6} />
+                      <span>{hasCustomPhoto ? 'Category photo set' : 'Default botanical'}</span>
+                    </span>
                     <div
                       dir="rtl"
-                      className="font-urdu text-sm text-[#5A6962] mt-0.5 text-right"
+                      className="font-urdu text-sm text-[#5A6962] text-right truncate"
                     >
                       {cat.urduName}
                     </div>
@@ -197,6 +234,7 @@ export default function CategoriesPage() {
                     <Edit className="w-3.5 h-3.5" strokeWidth={1.6} />
                     <span>Edit</span>
                   </Link>
+                </div>
                 </div>
                 </div>
               );

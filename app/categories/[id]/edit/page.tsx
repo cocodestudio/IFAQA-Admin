@@ -7,9 +7,8 @@ import { AilmentCategory, HerbalRemedy } from '@/lib/types';
 import { getAilmentById, getRemedies, updateAilment } from '@/lib/data-service';
 import { triggerNavigationProgress } from '@/lib/nav-progress';
 import { formatPriceINR } from '@/lib/formatters';
-import { FormInput, FormTextarea } from '@/components/ui/FormInput';
-import { RuledBadge } from '@/components/ui/ArchitecturalBadge';
-import { ArrowLeft, Save, AlertCircle, Tags, ExternalLink } from 'lucide-react';
+import { CategoryForm } from '@/components/forms/CategoryForm';
+import { ArrowLeft, AlertCircle, ExternalLink } from 'lucide-react';
 
 export default function EditCategoryPage() {
   const params = useParams();
@@ -37,26 +36,16 @@ export default function EditCategoryPage() {
       .finally(() => setLoading(false));
   }, [id]);
 
-  const handleSave = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async (
+    data: Omit<AilmentCategory, 'id' | 'createdAt' | 'updatedAt'>
+  ) => {
     if (!category) return;
     setSaving(true);
     setError(null);
     try {
-      await updateAilment(category.id, {
-        name: category.name,
-        urduName: category.urduName,
-        romanName: category.romanName,
-        tagline: category.tagline,
-        description: category.description,
-        displayOrder: category.displayOrder,
-        bannerImage: category.bannerImage,
-        isActive: category.isActive,
-      });
+      await updateAilment(category.id, data);
       triggerNavigationProgress('/categories');
       router.push('/categories');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save category');
     } finally {
       setSaving(false);
     }
@@ -110,127 +99,12 @@ export default function EditCategoryPage() {
         </div>
       </div>
 
-      {error && (
-        <div className="p-3.5 rounded-xl border border-red-200 bg-red-50 text-red-900 text-xs flex items-center gap-2.5">
-          <AlertCircle className="w-4 h-4 text-red-700 shrink-0" strokeWidth={1.6} />
-          <span>{error}</span>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        <form
-          onSubmit={handleSave}
-          className="lg:col-span-8 p-5 sm:p-6 bg-white rounded-xl border border-ifaqa-plum/10 shadow-luxury-card space-y-5"
-        >
-          <div className="border-b border-ifaqa-plum/10 pb-3">
-            <h3 className="font-serif font-normal text-lg text-ifaqa-plum">
-              Category details & storefront copy
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormInput
-              label="English category name *"
-              required
-              value={category.name}
-              onChange={(e) => setCategory({ ...category, name: e.target.value })}
-            />
-            <FormInput
-              label="Urdu title (RTL) *"
-              required
-              dir="rtl"
-              className="font-urdu text-base"
-              value={category.urduName}
-              onChange={(e) => setCategory({ ...category, urduName: e.target.value })}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <FormInput
-              label="Roman Urdu transliteration"
-              value={category.romanName}
-              onChange={(e) => setCategory({ ...category, romanName: e.target.value })}
-            />
-            <FormInput
-              label="Navigation display order"
-              type="number"
-              min="1"
-              className="font-mono tabular-nums"
-              value={category.displayOrder}
-              onChange={(e) =>
-                setCategory({ ...category, displayOrder: parseInt(e.target.value, 10) || 1 })
-              }
-            />
-          </div>
-
-          <FormInput
-            label="Category tagline"
-            value={category.tagline}
-            onChange={(e) => setCategory({ ...category, tagline: e.target.value })}
-          />
-
-          <FormTextarea
-            label="Full therapeutic overview"
-            rows={4}
-            value={category.description}
-            onChange={(e) => setCategory({ ...category, description: e.target.value })}
-          />
-
-          <FormInput
-            label="Header artwork path"
-            value={category.bannerImage}
-            onChange={(e) => setCategory({ ...category, bannerImage: e.target.value })}
-          />
-
-          <label className="inline-flex items-center gap-2.5 cursor-pointer text-sm text-ifaqa-plum pt-1">
-            <input
-              type="checkbox"
-              checked={category.isActive}
-              onChange={(e) => setCategory({ ...category, isActive: e.target.checked })}
-              className="w-4 h-4 rounded accent-[#0B2D22]"
-            />
-            <span>Publish category across storefront navigation</span>
-          </label>
-
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-ifaqa-plum/10">
-            <Link
-              href="/categories"
-              className="h-10 px-4 rounded-lg border border-ifaqa-plum/15 bg-white text-sm font-medium text-ifaqa-plum hover:bg-ifaqa-cashmere inline-flex items-center"
-            >
-              Cancel
-            </Link>
-            <button
-              type="submit"
-              disabled={saving}
-              className="h-10 px-6 rounded-lg bg-ifaqa-plum text-ifaqa-linen text-sm font-medium hover:bg-[#165A45] transition-colors disabled:opacity-50 inline-flex items-center gap-2"
-            >
-              <Save className="w-4 h-4" strokeWidth={1.6} />
-              <span>{saving ? 'Saving...' : 'Save category'}</span>
-            </button>
-          </div>
-        </form>
-
-        {/* Right: Storefront Preview + Assigned Remedies */}
-        <div className="lg:col-span-4 space-y-6">
-          <div className="p-5 bg-white rounded-xl border border-ifaqa-plum/10 shadow-luxury-card space-y-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium text-[#5A6962]">Card preview</span>
-              <RuledBadge accentColor={category.isActive ? 'emerald' : 'plum'}>
-                {category.isActive ? 'Visible' : 'Hidden'}
-              </RuledBadge>
-            </div>
-            <div className="p-4 rounded-xl bg-ifaqa-cashmere border border-ifaqa-plum/10 space-y-2">
-              <div className="w-8 h-8 rounded-lg bg-white border border-ifaqa-plum/10 flex items-center justify-center">
-                <Tags className="w-4 h-4 text-[#165A45]" strokeWidth={1.6} />
-              </div>
-              <div className="font-serif text-lg text-ifaqa-plum">{category.name}</div>
-              <div dir="rtl" className="font-urdu text-sm text-[#3E524A] text-right">
-                {category.urduName}
-              </div>
-              <p className="text-xs text-[#5A6962] leading-relaxed">{category.tagline}</p>
-            </div>
-          </div>
-
+      <CategoryForm
+        mode="edit"
+        initialData={category}
+        saving={saving}
+        onSubmit={handleSave}
+        rightSidebarExtra={
           <div className="p-5 bg-white rounded-xl border border-ifaqa-plum/10 shadow-luxury-card space-y-3">
             <div className="flex items-center justify-between border-b border-ifaqa-plum/10 pb-2.5">
               <h3 className="font-serif text-base text-ifaqa-plum">
@@ -262,8 +136,8 @@ export default function EditCategoryPage() {
               </div>
             )}
           </div>
-        </div>
-      </div>
+        }
+      />
     </div>
   );
 }
